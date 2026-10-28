@@ -343,6 +343,7 @@ export function createHrRepository(storage: MemStorage | null = defaultStorage()
               content: input.content.trim(),
               effectiveDate: input.effectiveDate,
               status: input.submit ? 'Chờ duyệt' : 'Nháp',
+              extras: input.extras,
             };
             return updated;
           });
@@ -363,6 +364,7 @@ export function createHrRepository(storage: MemStorage | null = defaultStorage()
         decidedBy: '',
         decidedAt: '',
         note: '',
+        extras: input.extras,
       };
       commit(d => { d.decisions.push(created); });
       return ok(created);

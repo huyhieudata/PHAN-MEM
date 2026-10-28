@@ -1,33 +1,41 @@
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { getModule } from '../data/menu';
-import EmployeeDetail from './hr/EmployeeDetail';
 import EmployeeList from './hr/EmployeeList';
-import ContractsPage from './hr/ContractsPage';
-import HeadcountPage from './hr/HeadcountPage';
-import DecisionsPage from './hr/DecisionsPage';
-import HrOverview from './hr/HrOverview';
-import { CertificatesPage, DirectoryPage, FamilyPage, InsurancePage, SettingsPage } from './hr/lists';
-import ReportsPage from './hr/ReportsPage';
-import RewardsPage from './hr/RewardsPage';
-import { BranchesPage, LevelsPage, OrgTreePage, PositionsPage, SystemOverview, UnitsPage } from './system/OrgPages';
+import EmployeeWizard from './hr/EmployeeWizard';
+import EmployeeProfile from './hr/EmployeeProfile';
+import { CertificatesPage, ContractReportPage, ContractSettingsPage, ContractsPage as ContractList, DecisionListPage, DecisionSettingsPage, DirectoryPage, FamilyPage, HeadcountPage as HeadcountBoard, HrDelegationPage, HrOverviewPage, HrReportPage, HrSettingsPage, InsuranceDeclarePage, InsuranceInfoPage, OnboardingSettings, RewardBatchPage } from './hr/catalog';
+import { LevelsPage, PositionsPage, SystemOverview, UnitsPage } from './system/OrgPages';
+import { AuditPage, BranchAdminPage, CompanyPage, LoginMethodPage, OpenApiPage, OrgStructurePage, PlanPage, Unsurveyed } from './system/spec';
 import RequestsPage from './don-tu/RequestsPage';
 import { DelegationPage, DonTuOverview, LeaveListPage, LeaveManagePage, LeavePolicyPage, OtPolicyPage, OtReportPage, OtThresholdPage, OtThresholdReport, ProcedurePage, ReasonPage, RequestReportPage, RequestSetupPage } from './don-tu/spec';
 import { AttendanceMethodPage, AttendanceOverview, AttendanceReports, HolidayPage, OpenShiftPage, RawAttendancePage, ScheduleConfigPage, SchedulePage, ShiftDayPage, ShiftListPage, ShiftPlanPage, StandardWorkdayPage, TemplateListPage, TimesheetPage, UnspecifiedPage, WorkdaySettings } from './cham-cong/Pages';
 
 const BUILT: Record<string, () => JSX.Element> = {
-  'nhan-su/overview': HrOverview,
+  'nhan-su/overview': HrOverviewPage,
   'nhan-su/thong-tin-nhan-su': EmployeeList,
-  'nhan-su/hop-dong': ContractsPage,
-  'nhan-su/dinh-bien': HeadcountPage,
+  'nhan-su/hop-dong': ContractList,
+  'nhan-su/dinh-bien': HeadcountBoard,
   'nhan-su/gia-dinh-nguoi-phu-thuoc': FamilyPage,
   'nhan-su/chung-chi': CertificatesPage,
   'nhan-su/danh-ba': DirectoryPage,
-  'nhan-su/khai-bao-bhxh': InsurancePage,
-  'nhan-su/quyet-dinh': DecisionsPage,
-  'nhan-su/khen-thuong': () => <RewardsPage kind="reward" />,
-  'nhan-su/ky-luat': () => <RewardsPage kind="discipline" />,
-  'nhan-su/bao-cao': ReportsPage,
-  'nhan-su/cai-dat': SettingsPage,
+  'nhan-su/uy-quyen-tat-ca': () => <HrDelegationPage mode="all" />,
+  'nhan-su/toi-uy-quyen': () => <HrDelegationPage mode="mine" />,
+  'nhan-su/duoc-uy-quyen': () => <HrDelegationPage mode="received" />,
+  'nhan-su/khai-bao-bhxh': InsuranceDeclarePage,
+  'nhan-su/thong-tin-bhxh': InsuranceInfoPage,
+  'nhan-su/quyet-dinh': () => <DecisionListPage view="all" />,
+  'nhan-su/quyet-dinh-cua-toi': () => <DecisionListPage view="mine" />,
+  'nhan-su/quyet-dinh-can-duyet': () => <DecisionListPage view="approve" />,
+  'nhan-su/quyet-dinh-uy-quyen': () => <DecisionListPage view="proxy" />,
+  'nhan-su/quyet-dinh-theo-doi': () => <DecisionListPage view="watch" />,
+  'nhan-su/khen-thuong': () => <RewardBatchPage kind="reward" />,
+  'nhan-su/ky-luat': () => <RewardBatchPage kind="discipline" />,
+  'nhan-su/bao-cao-nhan-su': HrReportPage,
+  'nhan-su/bao-cao-hop-dong': ContractReportPage,
+  'nhan-su/cai-dat-nhan-su': HrSettingsPage,
+  'nhan-su/cai-dat-hop-dong': ContractSettingsPage,
+  'nhan-su/cai-dat-quyet-dinh': DecisionSettingsPage,
+  'nhan-su/onboarding': OnboardingSettings,
   'don-tu/overview': DonTuOverview,
   'don-tu/tat-ca': () => <RequestsPage view="all" />,
   'don-tu/cua-toi': () => <RequestsPage view="mine" />,
@@ -71,11 +79,22 @@ const BUILT: Record<string, () => JSX.Element> = {
   'cham-cong/ho-so-khuon-mat': () => <UnspecifiedPage title="Hồ sơ khuôn mặt" />,
   'cham-cong/cham-cong-ho': () => <UnspecifiedPage title="Chấm công hộ" />,
   'he-thong/overview': SystemOverview,
-  'he-thong/he-thong-chi-nhanh': BranchesPage,
-  'he-thong/co-cau-to-chuc': OrgTreePage,
+  'he-thong/thong-tin-cong-ty': CompanyPage,
+  'he-thong/he-thong-chi-nhanh': BranchAdminPage,
+  'he-thong/co-cau-to-chuc': OrgStructurePage,
   'he-thong/cap-don-vi': LevelsPage,
   'he-thong/don-vi': UnitsPage,
   'he-thong/vi-tri-cong-viec': PositionsPage,
+  'he-thong/hinh-thuc-dang-nhap': LoginMethodPage,
+  'he-thong/lich-su-thao-tac': AuditPage,
+  'he-thong/goi-dich-vu': PlanPage,
+  'he-thong/open-api': OpenApiPage,
+  'he-thong/cai-dat-ung-dung-mobile': () => <Unsurveyed title="Cài đặt ứng dụng mobile" />,
+  'he-thong/goi-y-ma-nhan-vien': () => <Unsurveyed title="Gợi ý mã nhân viên" />,
+  'he-thong/tich-hop-hanet': () => <Unsurveyed title="Tích hợp Hanet" />,
+  'he-thong/tich-hop': () => <Unsurveyed title="Tích hợp" />,
+  'he-thong/business-rule': () => <Unsurveyed title="Business rule" />,
+  'he-thong/bieu-mau-tai-lieu': () => <Unsurveyed title="Biểu mẫu tài liệu" />,
 };
 
 export default function ModulePage() {
@@ -84,7 +103,8 @@ export default function ModulePage() {
   const mod = getModule(moduleId);
   if (!mod) return <Navigate to="/select-apps" replace />;
   const sub = mod.sub.find(s => s.id === (pageId || 'overview')) || { id: pageId || 'overview', label: 'Không tìm thấy trang' };
-  if (mod.id === 'nhan-su' && sub.id === 'thong-tin-nhan-su' && recordId) return <EmployeeDetail />;
+  if (mod.id === 'nhan-su' && sub.id === 'thong-tin-nhan-su' && recordId === 'tao-moi') return <EmployeeWizard />;
+  if (mod.id === 'nhan-su' && sub.id === 'thong-tin-nhan-su' && recordId) return <EmployeeProfile />;
   const Built = BUILT[`${mod.id}/${sub.id}`];
   const isOverview = sub.id === 'overview';
   return (
