@@ -9,6 +9,7 @@ import { AuditPage, BranchAdminPage, CompanyPage, LoginMethodPage, OpenApiPage, 
 import RequestsPage from './don-tu/RequestsPage';
 import { DelegationPage, DonTuOverview, LeaveListPage, LeaveManagePage, LeavePolicyPage, OtPolicyPage, OtReportPage, OtThresholdPage, OtThresholdReport, ProcedurePage, ReasonPage, RequestReportPage, RequestSetupPage } from './don-tu/spec';
 import { AttendanceMethodPage, AttendanceOverview, AttendanceReports, HolidayPage, OpenShiftPage, RawAttendancePage, ScheduleConfigPage, SchedulePage, ShiftDayPage, ShiftListPage, ShiftPlanPage, StandardWorkdayPage, TemplateListPage, TimesheetPage, UnspecifiedPage, WorkdaySettings } from './cham-cong/Pages';
+import { CriteriaPage, EvalOverview, FormCreate, FormFill, FormList, GroupPage, KpiBoard, KpiCreate, KpiList, PeriodCreate, PeriodList, TemplateDetail, TemplateEditor, TemplateList as EvalTemplates } from './eval/pages';
 import { AccountingPage, CostPage, CreatePayroll, IncomeInfoPage, PayrollDetail, PayrollGate, PayrollOverview, SalaryReport, TaxTablePage, listPage } from './payroll/pages';
 import { CategoryPage, IndicatorPage, ReportTemplatePage, SimpleMaster, TableSettingsPage, TemplateEdit, TemplateList, V1Extra, V1General, V1MainList, V1PayslipSettings } from './payroll/settings';
 
@@ -122,6 +123,26 @@ const BUILT: Record<string, () => JSX.Element> = {
   'tinh-luong/bang-luong-phu-v1': V1Extra,
   'tinh-luong/mau-bang-luong-v1': V1PayslipSettings,
   'tinh-luong/cai-dat-chung-v1': V1General,
+  'danh-gia/overview': EvalOverview,
+  'danh-gia/kpi-tat-ca': () => <KpiList view="all" />,
+  'danh-gia/kpi-can-thiet-lap': () => <KpiList view="setup" />,
+  'danh-gia/kpi-can-duyet': () => <KpiList view="approve" />,
+  'danh-gia/kpi-theo-doi': () => <KpiList view="watch" />,
+  'danh-gia/ky-tat-ca': () => <PeriodList view="all" />,
+  'danh-gia/ky-can-danh-gia': () => <PeriodList view="evaluate" />,
+  'danh-gia/ky-can-duyet': () => <PeriodList view="approve" />,
+  'danh-gia/ky-theo-doi': () => <PeriodList view="watch" />,
+  'danh-gia/phieu-tat-ca': () => <FormList view="all" />,
+  'danh-gia/phieu-cua-toi': () => <FormList view="mine" />,
+  'danh-gia/phieu-can-danh-gia': () => <FormList view="evaluate" />,
+  'danh-gia/phieu-can-duyet': () => <FormList view="approve" />,
+  'danh-gia/phieu-theo-doi': () => <FormList view="manage" />,
+  'danh-gia/kpi-bang-tat-ca': () => <KpiBoard view="all" />,
+  'danh-gia/kpi-cua-toi': () => <KpiBoard view="mine" />,
+  'danh-gia/kpi-nhan-vien': () => <KpiBoard view="team" />,
+  'danh-gia/tieu-chi': CriteriaPage,
+  'danh-gia/nhom-tieu-chi': GroupPage,
+  'danh-gia/mau-danh-gia': EvalTemplates,
 };
 
 export default function ModulePage() {
@@ -132,6 +153,12 @@ export default function ModulePage() {
   const sub = mod.sub.find(s => s.id === (pageId || 'overview')) || { id: pageId || 'overview', label: 'Không tìm thấy trang' };
   if (mod.id === 'nhan-su' && sub.id === 'thong-tin-nhan-su' && recordId === 'tao-moi') return <EmployeeWizard />;
   if (mod.id === 'nhan-su' && sub.id === 'thong-tin-nhan-su' && recordId) return <EmployeeProfile />;
+  if (mod.id === 'danh-gia' && sub.id === 'kpi-tat-ca' && recordId === 'tao') return <KpiCreate />;
+  if (mod.id === 'danh-gia' && sub.id === 'ky-tat-ca' && recordId === 'tao') return <PeriodCreate />;
+  if (mod.id === 'danh-gia' && sub.id === 'phieu-tat-ca' && recordId === 'tao') return <FormCreate />;
+  if (mod.id === 'danh-gia' && sub.id === 'phieu-tat-ca' && recordId) return <FormFill />;
+  if (mod.id === 'danh-gia' && sub.id === 'mau-danh-gia' && recordId === 'tao') return <TemplateEditor />;
+  if (mod.id === 'danh-gia' && sub.id === 'mau-danh-gia' && recordId) return <TemplateDetail />;
   if (mod.id === 'tinh-luong' && recordId === 'tao' && sub.id === 'mau-bang-luong') return <PayrollGate><TemplateEdit /></PayrollGate>;
   if (mod.id === 'tinh-luong' && recordId === 'tao') return <PayrollGate><CreatePayroll /></PayrollGate>;
   if (mod.id === 'tinh-luong' && recordId) return <PayrollGate><PayrollDetail /></PayrollGate>;
