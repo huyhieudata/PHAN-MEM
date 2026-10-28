@@ -9,6 +9,8 @@ import { AuditPage, BranchAdminPage, CompanyPage, LoginMethodPage, OpenApiPage, 
 import RequestsPage from './don-tu/RequestsPage';
 import { DelegationPage, DonTuOverview, LeaveListPage, LeaveManagePage, LeavePolicyPage, OtPolicyPage, OtReportPage, OtThresholdPage, OtThresholdReport, ProcedurePage, ReasonPage, RequestReportPage, RequestSetupPage } from './don-tu/spec';
 import { AttendanceMethodPage, AttendanceOverview, AttendanceReports, HolidayPage, OpenShiftPage, RawAttendancePage, ScheduleConfigPage, SchedulePage, ShiftDayPage, ShiftListPage, ShiftPlanPage, StandardWorkdayPage, TemplateListPage, TimesheetPage, UnspecifiedPage, WorkdaySettings } from './cham-cong/Pages';
+import { AccountingPage, CostPage, CreatePayroll, IncomeInfoPage, PayrollDetail, PayrollGate, PayrollOverview, SalaryReport, TaxTablePage, listPage } from './payroll/pages';
+import { CategoryPage, IndicatorPage, ReportTemplatePage, SimpleMaster, TableSettingsPage, TemplateEdit, TemplateList, V1Extra, V1General, V1MainList, V1PayslipSettings } from './payroll/settings';
 
 const BUILT: Record<string, () => JSX.Element> = {
   'nhan-su/overview': HrOverviewPage,
@@ -95,6 +97,31 @@ const BUILT: Record<string, () => JSX.Element> = {
   'he-thong/tich-hop': () => <Unsurveyed title="Tích hợp" />,
   'he-thong/business-rule': () => <Unsurveyed title="Business rule" />,
   'he-thong/bieu-mau-tai-lieu': () => <Unsurveyed title="Biểu mẫu tài liệu" />,
+  'tinh-luong/overview': PayrollOverview,
+  'tinh-luong/bang-luong-chinh': listPage('Bảng lương chính'),
+  'tinh-luong/bang-san-pham': listPage('Bảng sản phẩm'),
+  'tinh-luong/bang-kpi': listPage('Bảng lương KPI'),
+  'tinh-luong/khen-thuong-ky-luat': listPage('Bảng khen thưởng - kỷ luật'),
+  'tinh-luong/dieu-chinh-thu-nhap': listPage('Bảng điều chỉnh thu nhập'),
+  'tinh-luong/bang-luong-tam-ung': listPage('Bảng lương tạm ứng'),
+  'tinh-luong/bang-luong-khac': listPage('Bảng lương khác'),
+  'tinh-luong/chi-phi-luong': CostPage,
+  'tinh-luong/hach-toan-luong': AccountingPage,
+  'tinh-luong/thong-tin-thu-nhap': IncomeInfoPage,
+  'tinh-luong/bang-thue': TaxTablePage,
+  'tinh-luong/bao-cao-luong': SalaryReport,
+  'tinh-luong/mau-bang-luong': TemplateList,
+  'tinh-luong/thong-tin-tinh-luong': IndicatorPage,
+  'tinh-luong/san-pham': () => <SimpleMaster kind="product" />,
+  'tinh-luong/cost-center': () => <SimpleMaster kind="center" />,
+  'tinh-luong/phan-bo-chi-phi': () => <SimpleMaster kind="assign" />,
+  'tinh-luong/hang-muc-chi-phi': CategoryPage,
+  'tinh-luong/mau-bao-cao-hoach-toan': ReportTemplatePage,
+  'tinh-luong/cai-dat-bang-luong': TableSettingsPage,
+  'tinh-luong/bang-luong-chinh-v1': V1MainList,
+  'tinh-luong/bang-luong-phu-v1': V1Extra,
+  'tinh-luong/mau-bang-luong-v1': V1PayslipSettings,
+  'tinh-luong/cai-dat-chung-v1': V1General,
 };
 
 export default function ModulePage() {
@@ -105,14 +132,20 @@ export default function ModulePage() {
   const sub = mod.sub.find(s => s.id === (pageId || 'overview')) || { id: pageId || 'overview', label: 'Không tìm thấy trang' };
   if (mod.id === 'nhan-su' && sub.id === 'thong-tin-nhan-su' && recordId === 'tao-moi') return <EmployeeWizard />;
   if (mod.id === 'nhan-su' && sub.id === 'thong-tin-nhan-su' && recordId) return <EmployeeProfile />;
+  if (mod.id === 'tinh-luong' && recordId === 'tao' && sub.id === 'mau-bang-luong') return <PayrollGate><TemplateEdit /></PayrollGate>;
+  if (mod.id === 'tinh-luong' && recordId === 'tao') return <PayrollGate><CreatePayroll /></PayrollGate>;
+  if (mod.id === 'tinh-luong' && recordId) return <PayrollGate><PayrollDetail /></PayrollGate>;
   const Built = BUILT[`${mod.id}/${sub.id}`];
   const isOverview = sub.id === 'overview';
-  return (
+  const v2 = ['overview', 'bang-luong-chinh', 'bang-san-pham', 'bang-kpi', 'khen-thuong-ky-luat', 'dieu-chinh-thu-nhap', 'bang-luong-tam-ung', 'bang-luong-khac', 'chi-phi-luong', 'hach-toan-luong', 'thong-tin-thu-nhap', 'bang-thue'];
+  const payrollGroup = mod.id !== 'tinh-luong' ? '' : sub.id === 'bao-cao-luong' ? 'Báo cáo' : sub.id.endsWith('v1') && sub.id.startsWith('bang-') ? 'Tính lương V1' : v2.includes(sub.id) ? 'Tính lương V2' : 'Cài đặt';
+  const title = mod.id === 'tinh-luong' && isOverview ? 'Tổng quan module Tính lương' : isOverview ? `Tổng quan ${mod.label.toLowerCase()}` : sub.label;
+  const body = (
     <div>
       <div className="page-head">
         <div>
-          <div className="crumb"><a href="#/select-apps">Trang chủ</a> / <a href={`#/m/${mod.id}`}>{mod.label}</a>{!isOverview && <> / <span>{sub.label}</span></>}</div>
-          <h1>{isOverview ? `Tổng quan ${mod.label.toLowerCase()}` : sub.label}</h1>
+          <div className="crumb"><a href="#/select-apps">Trang chủ</a> / <a href={`#/m/${mod.id}`}>{mod.label}</a>{payrollGroup && <> / {payrollGroup}</>}{!isOverview && <> / <span>{sub.label}</span></>}</div>
+          <h1>{title}</h1>
         </div>
         <button className="btn-ghost" onClick={() => nav(-1)}>← Quay lại</button>
       </div>
@@ -134,4 +167,5 @@ export default function ModulePage() {
       )}
     </div>
   );
+  return mod.id === 'tinh-luong' ? <PayrollGate>{body}</PayrollGate> : body;
 }
