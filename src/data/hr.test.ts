@@ -147,8 +147,10 @@ describe('csv và hợp đồng', () => {
 describe('menu', () => {
   it('slug các trang nhân sự và hệ thống khớp route', () => {
     expect(getModule('nhan-su')?.sub.map(s => s.id)).toEqual([
-      'overview', 'thong-tin-nhan-su', 'hop-dong', 'dinh-bien', 'gia-dinh-nguoi-phu-thuoc', 'chung-chi',
-      'danh-ba', 'uy-quyen', 'khai-bao-bhxh', 'quyet-dinh', 'khen-thuong', 'ky-luat', 'bao-cao', 'cai-dat',
+      'overview', 'thong-tin-nhan-su', 'hop-dong', 'dinh-bien', 'gia-dinh-nguoi-phu-thuoc', 'chung-chi', 'danh-ba',
+      'uy-quyen-tat-ca', 'toi-uy-quyen', 'duoc-uy-quyen', 'khai-bao-bhxh', 'thong-tin-bhxh', 'quyet-dinh',
+      'quyet-dinh-cua-toi', 'quyet-dinh-can-duyet', 'quyet-dinh-uy-quyen', 'quyet-dinh-theo-doi',
+      'khen-thuong', 'ky-luat', 'bao-cao-nhan-su', 'bao-cao-hop-dong', 'cai-dat-nhan-su', 'cai-dat-hop-dong', 'cai-dat-quyet-dinh', 'onboarding',
     ]);
     expect(getModule('he-thong')?.sub.map(s => s.id)).toContain('co-cau-to-chuc');
     expect(getModule('he-thong')?.sub.map(s => s.id)).toContain('he-thong-chi-nhanh');

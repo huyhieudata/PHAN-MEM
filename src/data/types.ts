@@ -3,7 +3,7 @@
 export type Id = string;
 
 export type EmployeeStatus = 'Đang làm việc' | 'Tạm nghỉ' | 'Đã nghỉ việc';
-export type EmploymentType = 'Chính thức' | 'Thử việc' | 'Thực tập' | 'Thời vụ' | 'Cộng tác viên';
+export type EmploymentType = 'Chính thức' | 'Thử việc' | 'Thực tập' | 'Cộng tác viên' | 'Học việc' | 'Thuê ngoài' | 'Thời vụ' | 'Part-time';
 export type Gender = 'Nam' | 'Nữ' | 'Khác';
 export type Marital = 'Độc thân' | 'Đã kết hôn' | 'Ly hôn' | 'Khác';
 export type RecordStatus = 'Hoạt động' | 'Ngừng';
@@ -18,8 +18,15 @@ export type ContractStatus = 'Chờ ký' | 'Hiệu lực' | 'Thanh lý';
 
 export type DecisionType =
   | 'Bổ nhiệm'
+  | 'Miễn nhiệm'
   | 'Điều chuyển'
+  | 'Điều chuyển nội bộ'
   | 'Tăng lương'
+  | 'Điều chỉnh lương & phụ cấp'
+  | 'Tạm hoãn HĐLĐ'
+  | 'Tạm đình chỉ công việc'
+  | 'Sa thải'
+  | 'Chấm dứt HĐLĐ'
   | 'Khen thưởng'
   | 'Kỷ luật'
   | 'Nghỉ việc'
@@ -92,6 +99,24 @@ export interface Employee {
   employmentType: EmploymentType;
   status: EmployeeStatus;
   note: string;
+  englishName?: string;
+  officePhone?: string;
+  province?: string;
+  ward?: string;
+  tempAddress?: string;
+  educationLevel?: string;
+  school?: string;
+  major?: string;
+  gradYear?: string;
+  roleName?: string;
+  appUsed?: boolean;
+  noAttendance?: boolean;
+  concurrentPosition?: string;
+  salaryRegion?: string;
+  bankBranch?: string;
+  siMonths?: string;
+  workCondition?: string;
+  passportNumber?: string;
   siNumber: string;
   siStart: string;
   hiNumber: string;
@@ -157,6 +182,7 @@ export interface Decision {
   decidedBy: string;
   decidedAt: string;
   note: string;
+  extras?: Record<string, string>;
 }
 
 export interface Reward {
@@ -550,6 +576,7 @@ export interface DecisionInput {
   content: string;
   effectiveDate: string;
   submit: boolean;
+  extras?: Record<string, string>;
 }
 
 export type FieldErrors = Record<string, string>;
