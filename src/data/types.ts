@@ -171,6 +171,147 @@ export interface Reward {
   decisionId: string | null;
 }
 
+export type TimeRequestType =
+  | 'nghi-phep'
+  | 'di-muon-ve-som'
+  | 'lam-them-gio'
+  | 'cong-tac'
+  | 'lam-viec-tai-nha'
+  | 'bo-sung-cong'
+  | 'doi-ca';
+
+export type TimeRequestStatus = 'Nháp' | 'Chờ duyệt' | 'Đang duyệt' | 'Đã duyệt' | 'Từ chối' | 'Đã hủy';
+export type BalanceState = 'none' | 'pending' | 'used';
+export type ProcedureRole = 'Quản lý trực tiếp' | 'Trưởng phòng Nhân sự' | 'Giám đốc';
+
+export interface WorkShift {
+  id: Id;
+  code: string;
+  name: string;
+  start: string;
+  end: string;
+}
+
+export interface LeaveType {
+  id: Id;
+  name: string;
+  paid: boolean;
+  deduct: boolean;
+}
+
+export interface LeavePolicy {
+  id: Id;
+  name: string;
+  annualDays: number;
+  carryOverMax: number;
+  minNoticeDays: number;
+  allowNegative: boolean;
+}
+
+export interface OtPolicy {
+  id: Id;
+  name: string;
+  weekdayRate: number;
+  weekendRate: number;
+  holidayRate: number;
+  dailyHourCap: number;
+  monthlyHourCap: number;
+}
+
+export interface RequestReason {
+  id: Id;
+  type: TimeRequestType;
+  name: string;
+  active: boolean;
+}
+
+export interface RequestProcedure {
+  id: Id;
+  type: TimeRequestType;
+  name: string;
+  steps: { order: number; role: ProcedureRole }[];
+}
+
+export interface ApprovalDelegation {
+  id: Id;
+  fromName: string;
+  toName: string;
+  startDate: string;
+  endDate: string;
+  types: TimeRequestType[];
+  active: boolean;
+}
+
+export interface LeaveBalance {
+  id: Id;
+  employeeId: string;
+  year: number;
+  leaveTypeId: string;
+  entitled: number;
+  carried: number;
+  used: number;
+  pending: number;
+}
+
+export interface ApprovalStep {
+  order: number;
+  role: string;
+  approverName: string;
+  status: 'Chờ' | 'Đã duyệt' | 'Từ chối';
+  note: string;
+  actedAt: string;
+}
+
+export interface StatusEvent {
+  at: string;
+  actor: string;
+  action: string;
+  note: string;
+}
+
+export interface TimeRequest {
+  id: Id;
+  code: string;
+  type: TimeRequestType;
+  employeeId: string;
+  createdBy: string;
+  onBehalf: boolean;
+  reasonId: string;
+  note: string;
+  startDate: string;
+  endDate: string;
+  startTime: string;
+  endTime: string;
+  quantity: number;
+  leaveTypeId: string;
+  shiftId: string;
+  targetShiftId: string;
+  status: TimeRequestStatus;
+  watchers: string[];
+  steps: ApprovalStep[];
+  history: StatusEvent[];
+  balanceState: BalanceState;
+  createdAt: string;
+}
+
+export interface TimeRequestInput {
+  type: TimeRequestType;
+  employeeId: string;
+  onBehalf: boolean;
+  reasonId: string;
+  note: string;
+  startDate: string;
+  endDate: string;
+  startTime: string;
+  endTime: string;
+  quantity: number;
+  leaveTypeId: string;
+  shiftId: string;
+  targetShiftId: string;
+  watchers: string[];
+  submit: boolean;
+}
+
 export interface HrState {
   branches: Branch[];
   levels: OrgLevel[];
@@ -183,6 +324,15 @@ export interface HrState {
   headcounts: HeadcountPlan[];
   decisions: Decision[];
   rewards: Reward[];
+  shifts: WorkShift[];
+  leaveTypes: LeaveType[];
+  leavePolicy: LeavePolicy;
+  otPolicy: OtPolicy;
+  requestReasons: RequestReason[];
+  requestProcedures: RequestProcedure[];
+  delegations: ApprovalDelegation[];
+  leaveBalances: LeaveBalance[];
+  requests: TimeRequest[];
 }
 
 export type EmployeeInput = Omit<Employee, 'id'>;

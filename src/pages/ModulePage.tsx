@@ -11,6 +11,8 @@ import ReportsPage from './hr/ReportsPage';
 import RewardsPage from './hr/RewardsPage';
 import Timesheet from './Timesheet';
 import { BranchesPage, LevelsPage, OrgTreePage, PositionsPage, SystemOverview, UnitsPage } from './system/OrgPages';
+import RequestsPage from './don-tu/RequestsPage';
+import { DelegationPage, DonTuOverview, DonTuReports, DonTuSettings, LeaveListPage, LeaveOverview } from './don-tu/more';
 
 const BUILT: Record<string, () => JSX.Element> = {
   'nhan-su/overview': HrOverview,
@@ -26,6 +28,18 @@ const BUILT: Record<string, () => JSX.Element> = {
   'nhan-su/ky-luat': () => <RewardsPage kind="discipline" />,
   'nhan-su/bao-cao': ReportsPage,
   'nhan-su/cai-dat': SettingsPage,
+  'don-tu/overview': DonTuOverview,
+  'don-tu/tat-ca': () => <RequestsPage view="all" />,
+  'don-tu/cua-toi': () => <RequestsPage view="mine" />,
+  'don-tu/can-duyet': () => <RequestsPage view="approve" />,
+  'don-tu/uy-quyen-duyet': DelegationPage,
+  'don-tu/quan-ly': () => <RequestsPage view="manage" />,
+  'don-tu/theo-doi': () => <RequestsPage view="watch" />,
+  'don-tu/tao-ho': () => <RequestsPage view="behalf" />,
+  'don-tu/bao-cao': DonTuReports,
+  'don-tu/phep': LeaveOverview,
+  'don-tu/danh-sach-phep': LeaveListPage,
+  'don-tu/cai-dat': DonTuSettings,
   'cham-cong/bang-cong': Timesheet,
   'he-thong/overview': SystemOverview,
   'he-thong/he-thong-chi-nhanh': BranchesPage,

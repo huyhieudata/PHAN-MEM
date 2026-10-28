@@ -1,6 +1,6 @@
 # HRM Hub
 
-Phần mềm quản trị nhân sự, giao diện tiếng Việt, làm theo hướng các nền tảng như HappyTime. Giai đoạn này chạy hoàn toàn trên trình duyệt: dữ liệu nằm trong `localStorage`, phía sau một lớp repository để sau này thay bằng API mà không phải viết lại màn hình.
+Phần mềm quản trị nhân sự, giao diện tiếng Việt, làm theo hướng các nền tảng như HappyTime. Màu chủ đạo xanh `#2563EB`. Chữ Be Vietnam Pro được đóng gói sẵn (latin + tiếng Việt), không gọi CDN. Giai đoạn này chạy hoàn toàn trên trình duyệt: dữ liệu nằm trong `localStorage`, phía sau một lớp repository để sau này thay bằng API mà không phải viết lại màn hình.
 
 Xem trước sau khi bật GitHub Pages: [https://huyhieudata.github.io/PHAN-MEM/](https://huyhieudata.github.io/PHAN-MEM/)
 
@@ -57,12 +57,13 @@ Mọi thao tác ghi đi qua `hr` trong `src/data/repositories`. Giao diện ch�
 - Hệ thống: cây cơ cấu tổ chức, đơn vị, cấp đơn vị, vị trí, chi nhánh.
 - Danh bạ, người phụ thuộc, chứng chỉ, khai báo BHXH dùng chung dữ liệu hồ sơ.
 - Bảng công lấy nhân sự từ cùng repository.
+- Đơn từ: nghỉ phép, đi muộn/về sớm, OT, công tác, làm việc tại nhà, bổ sung công, đổi ca. Các mục Tất cả / Của tôi / Cần duyệt / Ủy quyền / Quản lý / Theo dõi / Tạo hộ, quỹ phép và chính sách OT.
 
 ## Lộ trình các phân hệ tiếp theo
 
 | Thứ tự | Phân hệ | Ghi chú |
 | --- | --- | --- |
-| 1 | Đơn từ & nghỉ phép | phép năm, đơn của tôi / cần duyệt, quỹ phép |
+| 1 | Đơn từ & nghỉ phép | Đã có: 7 loại đơn, duyệt nhiều bước, quỹ phép, chính sách OT |
 | 2 | Chấm công | thay bảng công demo bằng ca, công thực tế, tổng hợp |
 | 3 | Tính lương | bảng lương từ công, phụ cấp, khấu trừ |
 | 4 | Đánh giá | kỳ đánh giá, phiếu, KPI |
