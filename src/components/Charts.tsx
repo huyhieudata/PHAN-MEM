@@ -14,7 +14,7 @@ export function BarChart({ items }: { items: { label: string; value: number }[] 
   );
 }
 
-const COLORS = ['#F97316', '#3B82F6', '#10B981', '#EAB308', '#8B5CF6', '#64748B', '#EC4899'];
+const COLORS = ['#2563EB', '#0EA5E9', '#10B981', '#EAB308', '#8B5CF6', '#64748B', '#EC4899'];
 
 export function Donut({ items }: { items: { label: string; value: number }[] }) {
   const data = items.filter(i => i.value > 0);

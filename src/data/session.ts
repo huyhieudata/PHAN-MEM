@@ -1,7 +1,7 @@
 export const USER = { name: 'Dương Văn Hiệu', title: 'Giám đốc vận hành', initials: 'DH' };
 export const WORKSPACES = [
-  { id: 'macas', name: 'MACAS GROUP', color: '#F97316' },
-  { id: 'cec', name: 'CEC GROUP', color: '#2563EB' },
+  { id: 'macas', name: 'MACAS GROUP', color: '#1D4ED8' },
+  { id: 'cec', name: 'CEC GROUP', color: '#0284C7' },
   { id: 'cti', name: 'CTI GROUP', color: '#16A34A' },
   { id: 'h2n', name: 'H2N DƯỢC PHẨM', color: '#DB2777' },
   { id: 'pvk', name: 'HỘ KINH DOANH GIA DỤNG PHAN VĂN KHẢI', color: '#7C3AED' },

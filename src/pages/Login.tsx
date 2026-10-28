@@ -13,11 +13,11 @@ export default function Login() {
         <h1>Nền tảng quản trị nhân sự<br /><span>hiệu suất cao</span></h1>
         <p>Số hóa toàn bộ quy trình nhân sự: hồ sơ, chấm công, tính lương, đánh giá và hơn thế nữa.</p>
         <svg className="diagram" viewBox="0 0 400 260">
-          <circle cx="200" cy="130" r="46" fill="#F97316" /><text x="200" y="137" textAnchor="middle" fill="#fff" fontSize="20" fontWeight="700">HRM</text>
+          <circle cx="200" cy="130" r="46" fill="#2563EB" /><text x="200" y="137" textAnchor="middle" fill="#fff" fontSize="20" fontWeight="700">HRM</text>
           {[[70, 50, 'Nhân sự'], [330, 50, 'Chấm công'], [60, 210, 'Tính lương'], [340, 210, 'Đánh giá'], [200, 20, 'Đơn từ'], [200, 245, 'Công việc']].map(([x, y, t], i) => (
-            <g key={i}><line x1={200} y1={130} x2={x as number} y2={y as number} stroke="#FDBA74" strokeWidth="2" strokeDasharray="5 5" />
-              <rect x={(x as number) - 48} y={(y as number) - 15} width="96" height="30" rx="15" fill="#fff" stroke="#FDBA74" />
-              <text x={x as number} y={(y as number) + 5} textAnchor="middle" fontSize="13" fill="#9A3412">{t}</text></g>))}
+            <g key={i}><line x1={200} y1={130} x2={x as number} y2={y as number} stroke="#93C5FD" strokeWidth="2" strokeDasharray="5 5" />
+              <rect x={(x as number) - 48} y={(y as number) - 15} width="96" height="30" rx="15" fill="#fff" stroke="#93C5FD" />
+              <text x={x as number} y={(y as number) + 5} textAnchor="middle" fontSize="13" fill="#1E3A8A">{t}</text></g>))}
         </svg>
       </div>
       <div className="login-right">
