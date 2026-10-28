@@ -14,7 +14,7 @@ export function BarChart({ items }: { items: { label: string; value: number }[] 
   );
 }
 
-const COLORS = ['#2563EB', '#0EA5E9', '#10B981', '#EAB308', '#8B5CF6', '#64748B', '#EC4899'];
+const COLORS = ['#2563eb', '#0c7eae', '#207a52', '#b86a10', '#64748b', '#7c3aed', '#e11d48'];
 
 export function Donut({ items }: { items: { label: string; value: number }[] }) {
   const data = items.filter(i => i.value > 0);
@@ -26,7 +26,7 @@ export function Donut({ items }: { items: { label: string; value: number }[] }) 
     <div className="donut-wrap">
       <svg viewBox="0 0 140 140" width="168" height="168" role="img" aria-label="Biểu đồ tròn">
         <g transform="rotate(-90 70 70)">
-          {total === 0 && <circle cx="70" cy="70" r={r} fill="none" stroke="#E5E7EB" strokeWidth="16" />}
+          {total === 0 && <circle cx="70" cy="70" r={r} fill="none" stroke="hsl(var(--border))" strokeWidth="16" />}
           {data.map((item, index) => {
             const len = (item.value / Math.max(total, 1)) * circ;
             const node = (
