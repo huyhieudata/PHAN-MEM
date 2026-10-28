@@ -3,6 +3,7 @@ import type {
   HrState, OrgLevel, OrgUnit, Position, Reward,
 } from './types';
 import { addDaysISO, mailLocal, todayISO } from './text';
+import { buildAttendanceSeed } from './attendance';
 import { buildTimeoffSeed } from './timeoffSeed';
 
 /**
@@ -212,7 +213,8 @@ export function buildSeed(now = new Date()): HrState {
     { id: 'rw-05', employeeId: 'emp-12', kind: 'discipline', title: 'Đi trễ nhiều lần', form: 'Cảnh cáo', date: '2025-06-01', amount: 0, reason: 'Vi phạm nội quy giờ giấc (hồ sơ minh họa).', decisionId: null },
   ];
 
-  return { branches, levels, units, positions, employees, contracts, dependents, certificates, headcounts, decisions, rewards, ...buildTimeoffSeed(employees, now) };
+  const timeoff = buildTimeoffSeed(employees, now);
+  return { branches, levels, units, positions, employees, contracts, dependents, certificates, headcounts, decisions, rewards, ...timeoff, ...buildAttendanceSeed(employees, timeoff.requests, now) };
 }
 
 function addMonths(iso: string, months: number): string {

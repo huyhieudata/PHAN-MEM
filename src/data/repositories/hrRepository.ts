@@ -3,10 +3,10 @@ import { buildSeed } from '../seed';
 import { USER } from '../session';
 import { buildSteps, canAct, deductsBalance, findBalance, round1, validateTimeRequest } from '../timeoff';
 import type {
-  ApprovalDelegation, BranchInput, CertificateInput, ContractInput, Decision, DecisionInput, DependentInput,
-  Employee, EmployeeInput, FieldErrors, HeadcountInput, HrState, ImportResult, LeaveBalance, LeavePolicy, LevelInput,
-  OtPolicy, PositionInput, RequestProcedure, RequestReason, Result, RewardInput, TimeRequest, TimeRequestInput, UnitInput,
-  WorkShift,
+  ApprovalDelegation, AttendanceMethod, BranchInput, CertificateInput, ContractInput, Decision, DecisionInput, DependentInput,
+  Employee, EmployeeInput, FieldErrors, FraudAlert, HeadcountInput, Holiday, HrState, ImportResult, LeaveBalance, LeavePolicy, LeavePolicyV2, LevelInput,
+  OtPolicy, OtThreshold, PositionInput, Punch, RequestProcedure, RequestReason, RequestTypeSetting, Result, RewardInput, StandardWorkday, TimeRequest, TimeRequestInput, TimesheetTemplate, UnitInput,
+  WorkdayConfig, WorkShift,
 } from '../types';
 import { plain } from '../text';
 import {
@@ -61,6 +61,23 @@ export interface HrRepository {
   saveOtPolicy(input: OtPolicy): Result<OtPolicy>;
   saveLeaveBalance(input: LeaveBalance): Result<LeaveBalance>;
   saveShift(input: Omit<WorkShift, 'id'>, id?: string): Result<{ id: string }>;
+  savePunch(input: Omit<Punch, 'id'>): Result<Punch>;
+  deletePunch(id: string): Result;
+  setFraudConclusion(id: string, conclusion: FraudAlert['conclusion']): Result;
+  saveHoliday(input: Omit<Holiday, 'id'>, id?: string): Result<{ id: string }>;
+  deleteHoliday(id: string): Result;
+  saveTemplate(input: Omit<TimesheetTemplate, 'id'>, id?: string): Result<{ id: string }>;
+  saveStandardWorkday(input: Omit<StandardWorkday, 'id' | 'createdAt' | 'updatedAt'>): Result<{ id: string }>;
+  saveAttendanceMethod(input: Omit<AttendanceMethod, 'id' | 'updatedAt'>, id?: string): Result<{ id: string }>;
+  deleteAttendanceMethod(id: string): Result;
+  saveWorkdayConfig(input: WorkdayConfig): Result;
+  setOpenShift(enabled: boolean): Result;
+  saveOtThreshold(input: Omit<OtThreshold, 'id'>, id?: string): Result<{ id: string }>;
+  saveLeavePolicyV2(input: LeavePolicyV2): Result;
+  saveRequestTypeSetting(input: RequestTypeSetting): Result;
+  saveDeadline(days: number, otApproveAfter: boolean, otAdjustByRaw: boolean): Result;
+  assignShift(employeeId: string, date: string, shiftId: string): Result;
+  saveShiftPlan(input: { title: string; scope: string; startDate: string; endDate: string }): Result<{ id: string }>;
 }
 
 type MemStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
@@ -235,6 +252,8 @@ export function createHrRepository(storage: MemStorage | null = defaultStorage()
         d.decisions = d.decisions.filter(x => x.employeeId !== id);
         d.requests = (d.requests ?? []).filter(x => x.employeeId !== id);
         d.leaveBalances = (d.leaveBalances ?? []).filter(x => x.employeeId !== id);
+        d.punches = (d.punches ?? []).filter(x => x.employeeId !== id);
+        d.assignments = (d.assignments ?? []).filter(x => x.employeeId !== id);
         for (const unit of d.units) if (unit.managerId === id) unit.managerId = null;
         for (const emp of d.employees) if (emp.managerId === id) emp.managerId = null;
       });
@@ -429,6 +448,16 @@ export function createHrRepository(storage: MemStorage | null = defaultStorage()
           leaveTypeId: input.type === 'nghi-phep' ? input.leaveTypeId : '',
           shiftId: input.shiftId,
           targetShiftId: input.targetShiftId,
+          project: input.project ?? '',
+          prevDay: Boolean(input.prevDay),
+          nextDay: Boolean(input.nextDay),
+          breakMid: Boolean(input.breakMid),
+          caseType: input.caseType ?? '',
+          dueDate: input.dueDate ?? '',
+          birthDate: input.birthDate ?? '',
+          childCount: input.childCount ?? 1,
+          swapMode: input.swapMode ?? 'self',
+          swapWithId: input.swapWithId ?? '',
           status: input.submit ? 'Chờ duyệt' : 'Nháp',
           watchers: input.watchers,
           steps: input.submit ? buildSteps(employee, draft, input.type) : [],
@@ -547,7 +576,7 @@ export function createHrRepository(storage: MemStorage | null = defaultStorage()
     saveProcedure(input) {
       if (!input.steps.length) return fail({ form: 'Quy trình cần ít nhất một bước.' });
       commit(draft => {
-        const index = draft.requestProcedures.findIndex(item => item.id === input.id || item.type === input.type);
+        const index = draft.requestProcedures.findIndex(item => item.id === input.id);
         if (index >= 0) draft.requestProcedures[index] = input;
         else draft.requestProcedures.push(input);
       });
@@ -578,6 +607,120 @@ export function createHrRepository(storage: MemStorage | null = defaultStorage()
         if (id) draft.shifts = draft.shifts.map(item => item.id === id ? row : item);
         else draft.shifts.push(row);
       });
+      return ok({ id: saved });
+    },
+    savePunch(input) {
+      if (!input.employeeId || !input.at) return fail({ form: 'Chọn nhân sự, ngày và giờ chấm công.' });
+      const row: Punch = { ...input, id: uid('pu') };
+      commit(draft => { draft.punches.push(row); });
+      return ok(row);
+    },
+    deletePunch(id) {
+      commit(draft => { draft.punches = draft.punches.filter(item => item.id !== id); });
+      return ok(undefined);
+    },
+    setFraudConclusion(id, conclusion) {
+      if (!state.fraudAlerts.some(item => item.id === id)) return fail({ form: 'Không tìm thấy cảnh báo.' });
+      commit(draft => { draft.fraudAlerts = draft.fraudAlerts.map(item => item.id === id ? { ...item, conclusion } : item); });
+      return ok(undefined);
+    },
+    saveHoliday(input, id) {
+      if (!input.name.trim() || !input.startDate) return fail({ form: 'Nhập tên và ngày nghỉ lễ.' });
+      const saved = id ?? uid('hd');
+      commit(draft => {
+        const row = { ...input, name: input.name.trim(), endDate: input.endDate || input.startDate, id: saved };
+        if (id) draft.holidays = draft.holidays.map(item => item.id === id ? row : item);
+        else draft.holidays.push(row);
+      });
+      return ok({ id: saved });
+    },
+    deleteHoliday(id) {
+      commit(draft => { draft.holidays = draft.holidays.filter(item => item.id !== id); });
+      return ok(undefined);
+    },
+    saveTemplate(input, id) {
+      if (!input.name.trim()) return fail({ name: 'Nhập tên mẫu.' });
+      const saved = id ?? uid('tt');
+      commit(draft => {
+        const row = { ...input, name: input.name.trim(), id: saved };
+        if (id) draft.timesheetTemplates = draft.timesheetTemplates.map(item => item.id === id ? row : item);
+        else draft.timesheetTemplates.push(row);
+      });
+      return ok({ id: saved });
+    },
+    saveStandardWorkday(input) {
+      if (input.days <= 0) return fail({ form: 'Số công chuẩn phải lớn hơn 0.' });
+      const saved = uid('sw');
+      const today = new Date().toISOString().slice(0, 10);
+      commit(draft => { draft.standardWorkdays.push({ ...input, id: saved, createdAt: today, updatedAt: today }); });
+      return ok({ id: saved });
+    },
+    saveAttendanceMethod(input, id) {
+      if (!input.name.trim()) return fail({ name: 'Nhập tên cài đặt.' });
+      const saved = id ?? uid('am');
+      const today = new Date().toISOString().slice(0, 10);
+      commit(draft => {
+        const row = { ...input, name: input.name.trim(), id: saved, updatedAt: today };
+        if (id) draft.attendanceMethods = draft.attendanceMethods.map(item => item.id === id ? row : item);
+        else draft.attendanceMethods.push(row);
+      });
+      return ok({ id: saved });
+    },
+    deleteAttendanceMethod(id) {
+      commit(draft => { draft.attendanceMethods = draft.attendanceMethods.filter(item => item.id !== id); });
+      return ok(undefined);
+    },
+    saveWorkdayConfig(input) {
+      commit(draft => { draft.workdayConfig = input; });
+      return ok(undefined);
+    },
+    setOpenShift(enabled) {
+      commit(draft => { draft.openShiftEnabled = enabled; });
+      return ok(undefined);
+    },
+    saveOtThreshold(input, id) {
+      if (!input.name.trim()) return fail({ name: 'Nhập tên cấu hình.' });
+      const saved = id ?? uid('otc');
+      commit(draft => {
+        const row = { ...input, name: input.name.trim(), id: saved };
+        if (id) draft.otThresholds = draft.otThresholds.map(item => item.id === id ? row : item);
+        else draft.otThresholds.push(row);
+      });
+      return ok({ id: saved });
+    },
+    saveLeavePolicyV2(input) {
+      if (!input.name.trim() || !input.month) return fail({ form: 'Nhập tên chính sách và tháng áp dụng.' });
+      commit(draft => {
+        const index = draft.leavePoliciesV2.findIndex(item => item.id === input.id);
+        if (index >= 0) draft.leavePoliciesV2[index] = input;
+        else draft.leavePoliciesV2.push({ ...input, id: input.id || uid('lpv2') });
+      });
+      return ok(undefined);
+    },
+    saveRequestTypeSetting(input) {
+      commit(draft => {
+        const index = draft.requestTypeSettings.findIndex(item => item.type === input.type);
+        if (index >= 0) draft.requestTypeSettings[index] = input;
+        else draft.requestTypeSettings.push(input);
+      });
+      return ok(undefined);
+    },
+    saveDeadline(days, otApproveAfter, otAdjustByRaw) {
+      if (days < 0) return fail({ form: 'Số ngày không được âm.' });
+      commit(draft => { draft.deadlineDays = days; draft.otApproveAfter = otApproveAfter; draft.otAdjustByRaw = otAdjustByRaw; });
+      return ok(undefined);
+    },
+    assignShift(employeeId, date, shiftId) {
+      commit(draft => {
+        draft.assignments = draft.assignments.filter(item => !(item.employeeId === employeeId && item.date === date));
+        if (shiftId) draft.assignments.push({ id: uid('as'), employeeId, date, shiftId });
+      });
+      return ok(undefined);
+    },
+    saveShiftPlan(input) {
+      if (!input.title.trim()) return fail({ form: 'Nhập tiêu đề phân ca.' });
+      const saved = uid('sp');
+      commit(draft => { draft.shiftPlans.push({ ...input, title: input.title.trim(), id: saved, createdAt: new Date().toISOString().slice(0, 10) }); });
       return ok({ id: saved });
     },
   };

@@ -6,15 +6,42 @@ import type {
 import { addDaysISO, isISODate, todayISO } from './text';
 import { toCsv } from './csv';
 
-export const REQUEST_TYPES: { id: TimeRequestType; label: string; unit: 'ngày' | 'giờ' }[] = [
-  { id: 'nghi-phep', label: 'Nghỉ phép', unit: 'ngày' },
-  { id: 'di-muon-ve-som', label: 'Đi muộn / về sớm', unit: 'giờ' },
-  { id: 'lam-them-gio', label: 'Làm thêm giờ', unit: 'giờ' },
-  { id: 'cong-tac', label: 'Công tác', unit: 'ngày' },
-  { id: 'lam-viec-tai-nha', label: 'Làm việc tại nhà', unit: 'ngày' },
-  { id: 'bo-sung-cong', label: 'Bổ sung công', unit: 'ngày' },
-  { id: 'doi-ca', label: 'Đổi ca', unit: 'ngày' },
+export const REQUEST_TYPES: { id: TimeRequestType; label: string; unit: 'ngày' | 'giờ'; picker: boolean }[] = [
+  { id: 'nghi-phep', label: 'Đơn nghỉ phép', unit: 'ngày', picker: true },
+  { id: 'sua-cham-cong', label: 'Đơn sửa chấm công', unit: 'ngày', picker: true },
+  { id: 'lam-them-gio', label: 'Đơn làm thêm giờ', unit: 'giờ', picker: true },
+  { id: 'lam-viec-tai-nha', label: 'Đơn làm việc tại nhà', unit: 'ngày', picker: true },
+  { id: 'cong-tac', label: 'Đơn công tác', unit: 'ngày', picker: true },
+  { id: 'ra-ngoai', label: 'Đơn ra ngoài', unit: 'giờ', picker: true },
+  { id: 'di-muon-ve-som', label: 'Đơn đi muộn về sớm', unit: 'giờ', picker: true },
+  { id: 'doi-ca', label: 'Đơn đổi ca', unit: 'ngày', picker: true },
+  { id: 'nghi-thai-san', label: 'Đơn nghỉ thai sản', unit: 'ngày', picker: true },
+  { id: 'dang-ky-mang-thai', label: 'Đơn đăng ký mang thai', unit: 'ngày', picker: false },
+  { id: 'di-lam-som-sau-sinh', label: 'Đơn đi làm sớm sau sinh', unit: 'ngày', picker: false },
+  { id: 'xin-nghi-viec', label: 'Đơn xin nghỉ việc', unit: 'ngày', picker: false },
 ];
+
+export const STATUS_LABEL: Record<string, string> = {
+  'Nháp': 'Đã tạo đơn',
+  'Chờ duyệt': 'Chờ xử lý',
+  'Đang duyệt': 'Đang xử lý',
+  'Từ chối': 'Đã từ chối',
+  'Đã duyệt': 'Đã phê duyệt',
+  'Đã hủy': 'Đã hủy bỏ',
+  'Hệ thống hủy lịch': 'Hệ thống hủy đơn do lịch làm việc không còn hợp lệ',
+  'Hệ thống hủy hạn': 'Hệ thống hủy đơn do quá hạn chốt đơn',
+};
+
+export const STATUS_FILTERS = [
+  ['Chờ duyệt', 'Chờ xử lý'],
+  ['Đang duyệt', 'Đang xử lý'],
+  ['Từ chối', 'Đã từ chối'],
+  ['Đã duyệt', 'Đã phê duyệt'],
+  ['Đã hủy', 'Đã hủy bỏ'],
+  ['Nháp', 'Đã tạo đơn'],
+  ['Hệ thống hủy lịch', 'Hệ thống hủy đơn do lịch làm việc không còn hợp lệ'],
+  ['Hệ thống hủy hạn', 'Hệ thống hủy đơn do quá hạn chốt đơn'],
+] as const;
 
 export function requestLabel(type: TimeRequestType): string {
   return REQUEST_TYPES.find(item => item.id === type)?.label ?? type;
@@ -76,7 +103,7 @@ export function resolveApprover(role: ProcedureRole | string, employee: Employee
 }
 
 export function buildSteps(employee: Employee, state: HrState, type: TimeRequestType): ApprovalStep[] {
-  const procedure = state.requestProcedures.find(item => item.type === type);
+  const procedure = state.requestProcedures.find(item => item.types?.includes(type));
   const roles = procedure?.steps?.length ? procedure.steps : [
     { order: 1, role: 'Quản lý trực tiếp' as const },
     { order: 2, role: 'Giám đốc' as const },
@@ -129,7 +156,7 @@ export function validateTimeRequest(input: TimeRequestInput, state: HrState, exc
     if (!state.shifts.some(item => item.id === input.targetShiftId)) errors.targetShiftId = 'Chọn ca muốn đổi.';
     if (input.shiftId && input.shiftId === input.targetShiftId) errors.targetShiftId = 'Ca mới phải khác ca hiện tại.';
   }
-  if ((input.type === 'lam-them-gio' || input.type === 'di-muon-ve-som' || input.type === 'bo-sung-cong') && (!input.startTime || !input.endTime)) {
+  if ((input.type === 'lam-them-gio' || input.type === 'di-muon-ve-som' || input.type === 'ra-ngoai' || input.type === 'sua-cham-cong') && (!input.startTime || !input.endTime)) {
     errors.startTime = 'Nhập giờ bắt đầu và giờ kết thúc.';
   }
   if (input.type === 'nghi-phep' && input.startDate && state.leavePolicy.minNoticeDays > 0) {
@@ -172,7 +199,7 @@ export function emptyTimeoff(): Pick<HrState, 'shifts' | 'leaveTypes' | 'leavePo
     shifts: [],
     leaveTypes: [],
     leavePolicy: { id: 'lp-1', name: 'Phép năm chuẩn', annualDays: 12, carryOverMax: 3, minNoticeDays: 0, allowNegative: false },
-    otPolicy: { id: 'ot-1', name: 'OT chuẩn', weekdayRate: 1.5, weekendRate: 2, holidayRate: 3, dailyHourCap: 4, monthlyHourCap: 40 },
+    otPolicy: { id: 'ot-1', name: 'OT chuẩn', weekdayRate: 150, weekendRate: 200, holidayRate: 300, noShiftRate: 200, dailyHourCap: 4, monthlyHourCap: 40, method: 'don', overnight: 'tao-don', scope: 'Toàn công ty', payMode: 'rate', payPercent: 100, compPercent: 0, maxOrdersPerMonth: 30, leadDays: 0, requirePhoto: false, noOverlapShift: true, rules: 'Đơn OT cần được duyệt trước khi tăng ca, trừ trường hợp trực vận hành.' },
     requestReasons: [],
     requestProcedures: [],
     delegations: [],

@@ -173,12 +173,17 @@ export interface Reward {
 
 export type TimeRequestType =
   | 'nghi-phep'
-  | 'di-muon-ve-som'
+  | 'sua-cham-cong'
   | 'lam-them-gio'
-  | 'cong-tac'
   | 'lam-viec-tai-nha'
-  | 'bo-sung-cong'
-  | 'doi-ca';
+  | 'cong-tac'
+  | 'ra-ngoai'
+  | 'di-muon-ve-som'
+  | 'doi-ca'
+  | 'nghi-thai-san'
+  | 'dang-ky-mang-thai'
+  | 'di-lam-som-sau-sinh'
+  | 'xin-nghi-viec';
 
 export type TimeRequestStatus = 'Nháp' | 'Chờ duyệt' | 'Đang duyệt' | 'Đã duyệt' | 'Từ chối' | 'Đã hủy';
 export type BalanceState = 'none' | 'pending' | 'used';
@@ -190,6 +195,9 @@ export interface WorkShift {
   name: string;
   start: string;
   end: string;
+  kind: 'hanh-chinh' | 'don' | 'nang-cao';
+  active: boolean;
+  overnight: boolean;
 }
 
 export interface LeaveType {
@@ -214,22 +222,92 @@ export interface OtPolicy {
   weekdayRate: number;
   weekendRate: number;
   holidayRate: number;
+  noShiftRate: number;
   dailyHourCap: number;
   monthlyHourCap: number;
+  method: 'don' | 'ngay' | 'tuan';
+  overnight: 'tao-don' | 'tung-ngay';
+  scope: string;
+  payMode: 'rate' | 'rate-day' | 'limit';
+  payPercent: number;
+  compPercent: number;
+  maxOrdersPerMonth: number;
+  leadDays: number;
+  requirePhoto: boolean;
+  noOverlapShift: boolean;
+  rules: string;
 }
 
 export interface RequestReason {
   id: Id;
+  code: string;
   type: TimeRequestType;
   name: string;
   active: boolean;
+  maxDays: string;
+  maxOrders: string;
+  maxWork: string;
+  requireAttachment: boolean;
+  pay: 'use-leave' | 'paid-no-leave' | 'unpaid';
 }
 
 export interface RequestProcedure {
   id: Id;
-  type: TimeRequestType;
   name: string;
-  steps: { order: number; role: ProcedureRole }[];
+  scope: string;
+  types: TimeRequestType[];
+  steps: { order: number; role: ProcedureRole; fromDays: number; toDays: string; skipSla: boolean; slaAmount: number; slaMode: 'all' | 'no-sun' | 'no-weekend' }[];
+  followers: string[];
+}
+
+export interface RequestTypeSetting {
+  type: TimeRequestType;
+  description: string;
+  rule: string;
+  enabled: boolean;
+}
+
+export interface OtThreshold {
+  id: Id;
+  name: string;
+  effectiveDate: string;
+  wholeWorkspace: boolean;
+  scope: string;
+  daily: number;
+  weekly: number;
+  monthly: number;
+  yearly: number;
+  warnDaily: number;
+  warnWeekly: number;
+  warnMonthly: number;
+  email: boolean;
+  onExceed: boolean;
+  recipients: string[];
+  extraRecipients: string;
+  frequency: string;
+  isDefault: boolean;
+}
+
+export interface LeaveSource {
+  kind: 'nam' | 'sinh-nhat' | 'tham-nien' | 'nghi-bu';
+  active: boolean;
+  days: number;
+  firstMonthAfter: number;
+  startFrom: 'official' | 'start';
+  accrualPoint: 'fixed' | 'month-end';
+  formula: 'monthly' | 'full-year' | 'split-12';
+  expiry: 'this-year' | 'next-year';
+  reclaimMonth: string;
+  maxUse: number;
+}
+
+export interface LeavePolicyV2 {
+  id: Id;
+  name: string;
+  month: string;
+  scope: string;
+  employmentTypes: string[];
+  sources: LeaveSource[];
 }
 
 export interface ApprovalDelegation {
@@ -286,6 +364,16 @@ export interface TimeRequest {
   leaveTypeId: string;
   shiftId: string;
   targetShiftId: string;
+  project: string;
+  prevDay: boolean;
+  nextDay: boolean;
+  breakMid: boolean;
+  caseType: string;
+  dueDate: string;
+  birthDate: string;
+  childCount: number;
+  swapMode: 'other' | 'self' | 'drop';
+  swapWithId: string;
   status: TimeRequestStatus;
   watchers: string[];
   steps: ApprovalStep[];
@@ -309,7 +397,98 @@ export interface TimeRequestInput {
   shiftId: string;
   targetShiftId: string;
   watchers: string[];
+  project?: string;
+  prevDay?: boolean;
+  nextDay?: boolean;
+  breakMid?: boolean;
+  caseType?: string;
+  dueDate?: string;
+  birthDate?: string;
+  childCount?: number;
+  swapMode?: 'other' | 'self' | 'drop';
+  swapWithId?: string;
   submit: boolean;
+}
+
+export type PunchMethod = 'GPS' | 'Vân tay' | 'Hình ảnh có vị trí' | 'Tracker' | 'Hanet Camera';
+
+export interface Punch {
+  id: Id;
+  employeeId: string;
+  at: string;
+  code: string;
+  method: PunchMethod;
+  machine: string;
+  device: string;
+  ip: string;
+  gps: string;
+  branchId: string;
+  actor: string;
+}
+
+export interface FraudAlert {
+  id: Id;
+  at: string;
+  employeeId: string;
+  kind: string;
+  level: 'Cao' | 'Vừa' | 'Thấp';
+  detail: string;
+  conclusion: 'Chờ xử lý' | 'Hợp lệ' | 'Vi phạm' | 'Bỏ qua';
+}
+
+export interface ShiftAssignment {
+  id: Id;
+  employeeId: string;
+  date: string;
+  shiftId: string;
+}
+
+export interface ShiftPlan {
+  id: Id;
+  title: string;
+  scope: string;
+  startDate: string;
+  endDate: string;
+  createdAt: string;
+}
+
+export interface Holiday {
+  id: Id;
+  name: string;
+  startDate: string;
+  endDate: string;
+  scope: string;
+}
+
+export interface TimesheetTemplate {
+  id: Id;
+  name: string;
+  description: string;
+  active: boolean;
+}
+
+export interface StandardWorkday {
+  id: Id;
+  scope: string;
+  days: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AttendanceMethod {
+  id: Id;
+  name: string;
+  methods: string;
+  scope: string;
+  byBranch: string;
+  updatedAt: string;
+}
+
+export interface WorkdayConfig {
+  mode: 'last' | 'fixed';
+  fixedDay: number;
+  confirmFlow: boolean;
+  reminder: boolean;
 }
 
 export interface HrState {
@@ -333,6 +512,24 @@ export interface HrState {
   delegations: ApprovalDelegation[];
   leaveBalances: LeaveBalance[];
   requests: TimeRequest[];
+  requestTypeSettings: RequestTypeSetting[];
+  deadlineDays: number;
+  otApproveAfter: boolean;
+  otAdjustByRaw: boolean;
+  otThresholds: OtThreshold[];
+  leavePoliciesV2: LeavePolicyV2[];
+  punches: Punch[];
+  fraudAlerts: FraudAlert[];
+  assignments: ShiftAssignment[];
+  shiftPlans: ShiftPlan[];
+  holidays: Holiday[];
+  timesheetTemplates: TimesheetTemplate[];
+  standardWorkdays: StandardWorkday[];
+  attendanceMethods: AttendanceMethod[];
+  workdayConfig: WorkdayConfig;
+  openShiftEnabled: boolean;
+  faceProfiles: { id: Id; employeeId: string; updatedAt: string }[];
+  proxyClocks: { id: Id; helperId: string; employeeId: string; note: string }[];
 }
 
 export type EmployeeInput = Omit<Employee, 'id'>;

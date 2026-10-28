@@ -65,10 +65,10 @@ export function DataTable<T extends { id: string }>({ rows, columns, filterKey, 
         </table>
       </div>
       <div className="pager">
-        <span className="muted">Tổng: <b>{rows.length}</b></span>
+        <span className="muted">Hiển thị {sorted.length ? (current - 1) * size + 1 : 0}-{Math.min(current * size, sorted.length)} / {rows.length} Bản ghi</span>
         <div className="grow" />
         <select value={size} aria-label="Số dòng mỗi trang" onChange={e => { setSize(Number(e.target.value)); setPage(1); }}>
-          {[5, 10, 20, 50].map(n => <option key={n} value={n}>{n} / trang</option>)}
+          {[10, 20, 50, 100].map(n => <option key={n} value={n}>{n} / trang</option>)}
         </select>
         <button type="button" disabled={current === 1} onClick={() => setPage(current - 1)} aria-label="Trang trước">‹</button>
         {numbers.map(n => <button type="button" key={n} className={n === current ? 'on' : ''} onClick={() => setPage(n)}>{n}</button>)}
