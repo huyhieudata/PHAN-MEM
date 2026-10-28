@@ -64,8 +64,8 @@ Mọi thao tác ghi đi qua `hr` trong `src/data/repositories`. Giao diện ch�
 
 | Thứ tự | Phân hệ | Ghi chú |
 | --- | --- | --- |
-| 1 | Đơn từ & nghỉ phép | Đã có: 7 loại đơn, duyệt nhiều bước, quỹ phép, chính sách OT |
-| 2 | Chấm công | thay bảng công demo bằng ca, công thực tế, tổng hợp |
+| 1 | Đơn từ & nghỉ phép | Đã dựng theo khảo sát; vài công thức còn để ngỏ trong checklist |
+| 2 | Chấm công | Đã dựng các màn có trong khảo sát; mục chưa mô tả nằm trong docs/chamcong-parity-checklist.md |
 | 3 | Tính lương | bảng lương từ công, phụ cấp, khấu trừ |
 | 4 | Đánh giá | kỳ đánh giá, phiếu, KPI |
 | 5 | Công việc | dự án và việc được giao |
