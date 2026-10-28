@@ -1,6 +1,6 @@
 # HRM Hub
 
-Phần mềm quản trị nhân sự, giao diện tiếng Việt, làm theo hướng các nền tảng như HappyTime. Giai đoạn này chạy hoàn toàn trên trình duyệt: dữ liệu nằm trong `localStorage`, phía sau một lớp repository để sau này thay bằng API mà không phải viết lại màn hình.
+Phần mềm quản trị nhân sự, giao diện tiếng Việt, làm theo hướng các nền tảng như HappyTime. Màu chủ đạo xanh `#2563EB`. Chữ Be Vietnam Pro được đóng gói sẵn (latin + tiếng Việt), không gọi CDN. Giai đoạn này chạy hoàn toàn trên trình duyệt: dữ liệu nằm trong `localStorage`, phía sau một lớp repository để sau này thay bằng API mà không phải viết lại màn hình.
 
 Xem trước sau khi bật GitHub Pages: [https://huyhieudata.github.io/PHAN-MEM/](https://huyhieudata.github.io/PHAN-MEM/)
 
