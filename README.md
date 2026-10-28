@@ -1,60 +1,75 @@
 # HRM Hub
 
-Phần mềm quản trị nhân sự (HRM) theo mô hình các nền tảng thương mại như HappyTime. Giao diện tiếng Việt, chạy hoàn toàn trên trình duyệt ở giai đoạn này.
+Phần mềm quản trị nhân sự, giao diện tiếng Việt, làm theo hướng các nền tảng như HappyTime. Giai đoạn này chạy hoàn toàn trên trình duyệt: dữ liệu nằm trong `localStorage`, phía sau một lớp repository để sau này thay bằng API mà không phải viết lại màn hình.
 
-Xem trước (sau khi bật GitHub Pages): [https://huyhieudata.github.io/PHAN-MEM/](https://huyhieudata.github.io/PHAN-MEM/)
+Xem trước sau khi bật GitHub Pages: [https://huyhieudata.github.io/PHAN-MEM/](https://huyhieudata.github.io/PHAN-MEM/)
+
+Nếu trang chưa mở được, vào **Settings → Pages → Source: GitHub Actions** rồi chạy lại workflow `Deploy GitHub Pages`. Token mặc định của Actions thường không tự bật Pages lần đầu.
 
 ## Chạy trên máy
 
-Yêu cầu Node.js 20 trở lên.
+Cần Node.js 20 trở lên.
 
 ```bash
 npm ci
 npm run dev
 ```
 
-Mở địa chỉ Vite in ra (mặc định `http://localhost:5173`). Đăng nhập demo: nhập bất kỳ rồi chọn công ty.
+Mở địa chỉ Vite in ra (mặc định `http://localhost:5173`). Đăng nhập demo: nhập bất kỳ, rồi chọn công ty.
 
 ```bash
-npm run build    # kiểm tra kiểu TypeScript rồi đóng gói vào dist/
+npm test         # kiểm thử repository, CSV và danh sách nhân sự
+npm run build    # kiểm tra kiểu rồi đóng gói vào dist/
 npm run preview  # xem bản build
 ```
 
-Ứng dụng dùng `HashRouter` và `base: './'`, nên bản build mở được cả bằng file tĩnh lẫn dưới đường dẫn con của GitHub Pages (`/PHAN-MEM/`).
+Ứng dụng dùng `HashRouter` và `base: './'`, nên mở được dưới đường dẫn con `/PHAN-MEM/` của GitHub Pages. Đăng nhập là bản demo, không có máy chủ xác thực.
+
+Dữ liệu mẫu là hồ sơ hư cấu (số điện thoại `0900 000 0xx`, email `@vi-du.hrm.local`). Nút **Khôi phục dữ liệu mẫu** nằm ở Nhân sự → Cài đặt.
 
 ## Cấu trúc
 
 ```
 src/
-  main.tsx              # HashRouter
-  App.tsx               # các route gốc
-  styles.css            # giao diện (cam #F97316, thẻ trắng, bóng nhẹ)
-  data/menu.ts          # 14 phân hệ, menu con, launcher
-  data/session.ts       # người dùng demo và danh sách công ty
-  components/           # khung module, logo, giao diện sáng/tối
-  pages/                # đăng nhập, chọn công ty, launcher, trang phân hệ
-.github/workflows/      # build và deploy GitHub Pages (khi đã thêm)
+  main.tsx                 HashRouter
+  App.tsx                  route gốc
+  styles.css               cam #F97316, thẻ trắng, bóng nhẹ
+  data/menu.ts             14 phân hệ và menu
+  data/types.ts            mô hình nhân sự
+  data/seed.ts             dữ liệu mẫu
+  data/repositories/       HrRepository + localStorage
+  pages/hr/                phân hệ Nhân sự
+  pages/system/            cơ cấu tổ chức, đơn vị, vị trí, chi nhánh
+  pages/Timesheet.tsx      bảng công đọc chung danh sách nhân sự
+.github/workflows/pages.yml
 ```
 
-Dữ liệu nghiệp vụ sẽ nằm sau một lớp repository (`src/data/repositories`) để sau này thay bằng API mà không phải sửa giao diện.
+Mọi thao tác ghi đi qua `hr` trong `src/data/repositories`. Giao diện chỉ gọi `useHr()` và các hàm `save*` / `delete*`. Muốn đổi sang API, viết một lớp cùng interface và giữ nguyên trang.
 
-## Lộ trình phân hệ
+## Đã có trong giai đoạn này
 
-| Thứ tự | Phân hệ | Trạng thái |
+- Thông tin nhân sự: lọc, sắp xếp, phân trang, tìm không dấu, thêm / sửa / xóa, hồ sơ chi tiết (cá nhân, công việc, hợp đồng, gia đình, chứng chỉ, BHXH), import / export CSV.
+- Hợp đồng: tạo, sửa, trạng thái hiệu lực / sắp hết hạn / hết hạn / chờ ký / thanh lý.
+- Định biên: kế hoạch so với số người thực tế theo đơn vị và vị trí.
+- Quyết định: Tất cả / Của tôi / Cần duyệt, tạo nháp hoặc gửi duyệt, duyệt, từ chối.
+- Khen thưởng và kỷ luật.
+- Báo cáo: biểu đồ biên chế theo đơn vị, thâm niên, loại hợp đồng.
+- Hệ thống: cây cơ cấu tổ chức, đơn vị, cấp đơn vị, vị trí, chi nhánh.
+- Danh bạ, người phụ thuộc, chứng chỉ, khai báo BHXH dùng chung dữ liệu hồ sơ.
+- Bảng công lấy nhân sự từ cùng repository.
+
+## Lộ trình các phân hệ tiếp theo
+
+| Thứ tự | Phân hệ | Ghi chú |
 | --- | --- | --- |
-| 1 | Nhân sự (hồ sơ, hợp đồng, tổ chức, định biên, quyết định, khen thưởng/kỷ luật, báo cáo, CSV) | Đang xây |
-| 2 | Đơn từ & nghỉ phép | Chưa làm |
-| 3 | Chấm công | Demo bảng công |
-| 4 | Tính lương | Chưa làm |
-| 5 | Đánh giá | Chưa làm |
-| 6 | Công việc | Chưa làm |
-| 7 | Tài sản | Chưa làm |
-| 8 | Đề xuất | Chưa làm |
-| 9 | Tài liệu | Chưa làm |
-| 10 | Ký số | Chưa làm |
-| 11 | Truyền thông nội bộ | Chưa làm |
-| 12 | Cá nhân (self-service) | Chưa làm |
-| 13 | Hệ thống (cơ cấu, đơn vị, vị trí, chi nhánh) | Đi cùng Nhân sự |
-| — | Tổng quan / launcher | Khung sẵn |
-
-Trang chưa xây hiển thị placeholder. Trang đã có màn hình thật được đăng ký trong `src/pages/ModulePage.tsx`.
+| 1 | Đơn từ & nghỉ phép | phép năm, đơn của tôi / cần duyệt, quỹ phép |
+| 2 | Chấm công | thay bảng công demo bằng ca, công thực tế, tổng hợp |
+| 3 | Tính lương | bảng lương từ công, phụ cấp, khấu trừ |
+| 4 | Đánh giá | kỳ đánh giá, phiếu, KPI |
+| 5 | Công việc | dự án và việc được giao |
+| 6 | Tài sản | cấp phát, thu hồi |
+| 7 | Đề xuất | luồng duyệt giống quyết định |
+| 8 | Tài liệu và ký số | kho tài liệu, trình ký |
+| 9 | Truyền thông nội bộ | bảng tin, thông báo |
+| 10 | Cá nhân | self-service đọc dữ liệu nhân sự của người đăng nhập |
+| 11 | Hệ thống phần còn lại | phân quyền, lịch sử thao tác, tích hợp, Open API |
