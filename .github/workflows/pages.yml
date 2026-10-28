@@ -23,7 +23,9 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # jsdom 30 kéo undici 8. File decompress.js gọi zlib.createZstdDecompress.bind(...)
+          # ngay khi nạp module. Node 20 không có API này nên Vitest chết trước khi chạy test.
+          node-version-file: .nvmrc
           cache: npm
       - name: Install
         run: npm ci
