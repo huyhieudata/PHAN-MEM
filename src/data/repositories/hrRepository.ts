@@ -1,9 +1,12 @@
 import { employeeTemplateCsv, employeesToCsv, parseCsv } from '../csv';
 import { buildSeed } from '../seed';
+import { USER } from '../session';
+import { buildSteps, canAct, deductsBalance, findBalance, round1, validateTimeRequest } from '../timeoff';
 import type {
-  BranchInput, CertificateInput, ContractInput, Decision, DecisionInput, DependentInput,
-  Employee, EmployeeInput, FieldErrors, HeadcountInput, HrState, ImportResult, LevelInput,
-  PositionInput, Result, RewardInput, UnitInput,
+  ApprovalDelegation, BranchInput, CertificateInput, ContractInput, Decision, DecisionInput, DependentInput,
+  Employee, EmployeeInput, FieldErrors, HeadcountInput, HrState, ImportResult, LeaveBalance, LeavePolicy, LevelInput,
+  OtPolicy, PositionInput, RequestProcedure, RequestReason, Result, RewardInput, TimeRequest, TimeRequestInput, UnitInput,
+  WorkShift,
 } from '../types';
 import { plain } from '../text';
 import {
@@ -45,6 +48,19 @@ export interface HrRepository {
   importEmployeesCsv(text: string): ImportResult;
   exportEmployeesCsv(rows?: Employee[]): string;
   employeeTemplate(): string;
+  saveRequest(input: TimeRequestInput, id?: string, actor?: string): Result<TimeRequest>;
+  approveRequest(id: string, note: string, actor: string): Result<TimeRequest>;
+  rejectRequest(id: string, note: string, actor: string): Result<TimeRequest>;
+  cancelRequest(id: string, actor: string): Result<TimeRequest>;
+  saveDelegation(input: Omit<ApprovalDelegation, 'id'>, id?: string): Result<{ id: string }>;
+  deleteDelegation(id: string): Result;
+  saveReason(input: Omit<RequestReason, 'id'>, id?: string): Result<{ id: string }>;
+  deleteReason(id: string): Result;
+  saveProcedure(input: RequestProcedure): Result<RequestProcedure>;
+  saveLeavePolicy(input: LeavePolicy): Result<LeavePolicy>;
+  saveOtPolicy(input: OtPolicy): Result<OtPolicy>;
+  saveLeaveBalance(input: LeaveBalance): Result<LeaveBalance>;
+  saveShift(input: Omit<WorkShift, 'id'>, id?: string): Result<{ id: string }>;
 }
 
 type MemStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
@@ -217,6 +233,8 @@ export function createHrRepository(storage: MemStorage | null = defaultStorage()
         d.certificates = d.certificates.filter(x => x.employeeId !== id);
         d.rewards = d.rewards.filter(x => x.employeeId !== id);
         d.decisions = d.decisions.filter(x => x.employeeId !== id);
+        d.requests = (d.requests ?? []).filter(x => x.employeeId !== id);
+        d.leaveBalances = (d.leaveBalances ?? []).filter(x => x.employeeId !== id);
         for (const unit of d.units) if (unit.managerId === id) unit.managerId = null;
         for (const emp of d.employees) if (emp.managerId === id) emp.managerId = null;
       });
@@ -385,7 +403,194 @@ export function createHrRepository(storage: MemStorage | null = defaultStorage()
     employeeTemplate() {
       return employeeTemplateCsv();
     },
+    saveRequest(input, id, actor = USER.name) {
+      const errors = validateTimeRequest(input, state, id);
+      if (!emptyErrors(errors)) return fail(errors);
+      const employee = state.employees.find(item => item.id === input.employeeId)!;
+      const existing = id ? state.requests.find(item => item.id === id) : undefined;
+      if (id && !existing) return fail({ form: 'Không tìm thấy đơn.' });
+      if (existing && existing.status !== 'Nháp') return fail({ form: 'Chỉ sửa được đơn nháp.' });
+      let saved!: TimeRequest;
+      commit(draft => {
+        const row: TimeRequest = {
+          id: id ?? uid('rq'),
+          code: existing?.code || nextCode(draft.requests.map(item => item.code), 'DT'),
+          type: input.type,
+          employeeId: input.employeeId,
+          createdBy: existing?.createdBy || actor,
+          onBehalf: input.onBehalf,
+          reasonId: input.reasonId,
+          note: input.note.trim(),
+          startDate: input.startDate,
+          endDate: input.endDate || input.startDate,
+          startTime: input.startTime,
+          endTime: input.endTime,
+          quantity: Number(input.quantity),
+          leaveTypeId: input.type === 'nghi-phep' ? input.leaveTypeId : '',
+          shiftId: input.shiftId,
+          targetShiftId: input.targetShiftId,
+          status: input.submit ? 'Chờ duyệt' : 'Nháp',
+          watchers: input.watchers,
+          steps: input.submit ? buildSteps(employee, draft, input.type) : [],
+          history: [...(existing?.history ?? []), { at: new Date().toISOString(), actor, action: input.submit ? 'Gửi duyệt' : 'Lưu nháp', note: input.note.trim() }],
+          balanceState: 'none',
+          createdAt: existing?.createdAt || new Date().toISOString(),
+        };
+        if (input.submit && deductsBalance(draft, input)) {
+          adjustBalance(draft, row.employeeId, row.leaveTypeId, Number(row.startDate.slice(0, 4)), { pending: row.quantity });
+          row.balanceState = 'pending';
+        }
+        if (id) draft.requests = draft.requests.map(item => item.id === id ? row : item);
+        else draft.requests.push(row);
+        saved = row;
+      });
+      return ok(saved);
+    },
+    approveRequest(id, note, actor) {
+      const current = state.requests.find(item => item.id === id);
+      if (!current) return fail({ form: 'Không tìm thấy đơn.' });
+      if (!canAct(current, actor, state)) return fail({ form: 'Bạn không ở bước duyệt hiện tại.' });
+      let saved!: TimeRequest;
+      commit(draft => {
+        const request = draft.requests.find(item => item.id === id)!;
+        const step = request.steps.find(item => item.status === 'Chờ')!;
+        const via = step.approverName === actor ? '' : ` theo ủy quyền của ${step.approverName}`;
+        step.status = 'Đã duyệt';
+        step.note = note.trim();
+        step.actedAt = new Date().toISOString();
+        const more = request.steps.some(item => item.status === 'Chờ');
+        request.status = more ? 'Đang duyệt' : 'Đã duyệt';
+        if (!more && request.balanceState === 'pending') {
+          adjustBalance(draft, request.employeeId, request.leaveTypeId, Number(request.startDate.slice(0, 4)), { pending: -request.quantity, used: request.quantity });
+          request.balanceState = 'used';
+        }
+        request.history.push({ at: step.actedAt, actor, action: `Duyệt${via}`, note: note.trim() });
+        saved = request;
+      });
+      return ok(saved);
+    },
+    rejectRequest(id, note, actor) {
+      if (!note.trim()) return fail({ note: 'Nhập lý do từ chối.' });
+      const current = state.requests.find(item => item.id === id);
+      if (!current) return fail({ form: 'Không tìm thấy đơn.' });
+      if (!canAct(current, actor, state)) return fail({ form: 'Bạn không ở bước duyệt hiện tại.' });
+      let saved!: TimeRequest;
+      commit(draft => {
+        const request = draft.requests.find(item => item.id === id)!;
+        const step = request.steps.find(item => item.status === 'Chờ')!;
+        step.status = 'Từ chối';
+        step.note = note.trim();
+        step.actedAt = new Date().toISOString();
+        request.status = 'Từ chối';
+        if (request.balanceState === 'pending') {
+          adjustBalance(draft, request.employeeId, request.leaveTypeId, Number(request.startDate.slice(0, 4)), { pending: -request.quantity });
+          request.balanceState = 'none';
+        }
+        request.history.push({ at: step.actedAt, actor, action: 'Từ chối', note: note.trim() });
+        saved = request;
+      });
+      return ok(saved);
+    },
+    cancelRequest(id, actor) {
+      const current = state.requests.find(item => item.id === id);
+      if (!current) return fail({ form: 'Không tìm thấy đơn.' });
+      if (current.status === 'Đã duyệt' || current.status === 'Từ chối' || current.status === 'Đã hủy') {
+        return fail({ form: 'Không hủy được đơn đã kết thúc.' });
+      }
+      if (current.createdBy !== actor && actor !== USER.name) return fail({ form: 'Chỉ người tạo hoặc quản trị mới hủy được đơn.' });
+      let saved!: TimeRequest;
+      commit(draft => {
+        const request = draft.requests.find(item => item.id === id)!;
+        if (request.balanceState === 'pending') {
+          adjustBalance(draft, request.employeeId, request.leaveTypeId, Number(request.startDate.slice(0, 4)), { pending: -request.quantity });
+          request.balanceState = 'none';
+        }
+        request.status = 'Đã hủy';
+        request.history.push({ at: new Date().toISOString(), actor, action: 'Hủy đơn', note: '' });
+        saved = request;
+      });
+      return ok(saved);
+    },
+    saveDelegation(input, id) {
+      const errors: FieldErrors = {};
+      if (!input.fromName.trim() || !input.toName.trim()) errors.form = 'Nhập người ủy quyền và người được ủy quyền.';
+      if (input.fromName.trim() === input.toName.trim()) errors.form = 'Không ủy quyền cho chính mình.';
+      if (!input.startDate || !input.endDate || input.endDate < input.startDate) errors.endDate = 'Khoảng ngày không hợp lệ.';
+      if (Object.keys(errors).length) return fail(errors);
+      const saved = id ?? uid('uq');
+      commit(draft => {
+        const row = { ...input, fromName: input.fromName.trim(), toName: input.toName.trim(), id: saved };
+        if (id) draft.delegations = draft.delegations.map(item => item.id === id ? row : item);
+        else draft.delegations.push(row);
+      });
+      return ok({ id: saved });
+    },
+    deleteDelegation(id) {
+      commit(draft => { draft.delegations = draft.delegations.filter(item => item.id !== id); });
+      return ok(undefined);
+    },
+    saveReason(input, id) {
+      if (!input.name.trim()) return fail({ name: 'Nhập lý do.' });
+      const saved = id ?? uid('rs');
+      commit(draft => {
+        const row = { ...input, name: input.name.trim(), id: saved };
+        if (id) draft.requestReasons = draft.requestReasons.map(item => item.id === id ? row : item);
+        else draft.requestReasons.push(row);
+      });
+      return ok({ id: saved });
+    },
+    deleteReason(id) {
+      if (state.requests.some(item => item.reasonId === id)) return fail({ form: 'Lý do đang được dùng trong đơn.' });
+      commit(draft => { draft.requestReasons = draft.requestReasons.filter(item => item.id !== id); });
+      return ok(undefined);
+    },
+    saveProcedure(input) {
+      if (!input.steps.length) return fail({ form: 'Quy trình cần ít nhất một bước.' });
+      commit(draft => {
+        const index = draft.requestProcedures.findIndex(item => item.id === input.id || item.type === input.type);
+        if (index >= 0) draft.requestProcedures[index] = input;
+        else draft.requestProcedures.push(input);
+      });
+      return ok(input);
+    },
+    saveLeavePolicy(input) {
+      if (input.annualDays < 0 || input.carryOverMax < 0 || input.minNoticeDays < 0) return fail({ form: 'Các số ngày không được âm.' });
+      commit(draft => { draft.leavePolicy = input; });
+      return ok(input);
+    },
+    saveOtPolicy(input) {
+      if (input.dailyHourCap <= 0 || input.monthlyHourCap <= 0) return fail({ form: 'Trần giờ OT phải lớn hơn 0.' });
+      commit(draft => { draft.otPolicy = input; });
+      return ok(input);
+    },
+    saveLeaveBalance(input) {
+      if (input.entitled < 0 || input.carried < 0) return fail({ form: 'Quỹ phép không được âm.' });
+      commit(draft => {
+        draft.leaveBalances = draft.leaveBalances.map(item => item.id === input.id ? input : item);
+      });
+      return ok(input);
+    },
+    saveShift(input, id) {
+      if (!input.name.trim() || !input.start || !input.end) return fail({ form: 'Nhập tên ca và khung giờ.' });
+      const saved = id ?? uid('ca');
+      commit(draft => {
+        const row = { ...input, name: input.name.trim(), code: input.code.trim() || saved.toUpperCase(), id: saved };
+        if (id) draft.shifts = draft.shifts.map(item => item.id === id ? row : item);
+        else draft.shifts.push(row);
+      });
+      return ok({ id: saved });
+    },
   };
+
+function adjustBalance(draft: HrState, employeeId: string, leaveTypeId: string, year: number, delta: { pending?: number; used?: number }) {
+  let row = findBalance(draft, employeeId, leaveTypeId, year);
+  if (!row) {
+    row = { id: uid('lb'), employeeId, leaveTypeId, year, entitled: draft.leavePolicy.annualDays, carried: 0, used: 0, pending: 0 };
+    draft.leaveBalances.push(row);
+  }
+  row.pending = Math.max(0, round1(row.pending + (delta.pending ?? 0)));
+  row.used = Math.max(0, round1(row.used + (delta.used ?? 0)));
+}
 
   function decide(id: string, status: 'Đã duyệt' | 'Từ chối', note: string, actor: string): Result<Decision> {
     const current = state.decisions.find(d => d.id === id);
@@ -530,12 +735,22 @@ function defaultStorage(): MemStorage | null {
   }
 }
 
+function hydrate(data: HrState): HrState {
+  return { ...buildSeed(), ...data };
+}
+
 function read(storage: MemStorage | null): HrState {
   try {
     const raw = storage?.getItem(STORAGE_KEY);
     if (raw) {
       const data = JSON.parse(raw) as HrState;
-      if (data && Array.isArray(data.employees) && Array.isArray(data.units) && Array.isArray(data.contracts)) return data;
+      if (data && Array.isArray(data.employees) && Array.isArray(data.units) && Array.isArray(data.contracts)) {
+        const hydrated = hydrate(data);
+        if (!Array.isArray(data.requests)) {
+          try { storage?.setItem(STORAGE_KEY, JSON.stringify(hydrated)); } catch { /* bỏ qua */ }
+        }
+        return hydrated;
+      }
     }
   } catch { /* dùng dữ liệu mẫu */ }
   const fresh = buildSeed();
