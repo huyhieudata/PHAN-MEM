@@ -4,7 +4,8 @@ import Logo from '../components/Logo';
 import { LAUNCHER_PAGES } from '../data/menu';
 import { USER, currentWs } from '../data/session';
 import { useTheme } from '../components/useTheme';
-import { EMPLOYEES } from '../data/employees';
+import { useHr } from '../hooks/useHr';
+import { plain, yearsBetween, todayISO } from '../data/text';
 
 function Clock() {
   const [d, setD] = useState(new Date());
@@ -22,6 +23,14 @@ function MiniCal() {
     {cells.map((c, i) => <span key={i} className={(c === now.getDate() ? 'today ' : '') + (ev.includes(c) ? 'ev' : '')}>{c || ''}</span>)}</div></div>;
 }
 function Tabs({ items }: { items: string[] }) { const [t, setT] = useState(0); return <div className="ctabs">{items.map((x, i) => <button key={x} className={i === t ? 'on' : ''} onClick={() => setT(i)}>{x}</button>)}</div>; }
+function nextBirthday(dob: string, today: Date): number {
+  const [, m, d] = dob.split('-').map(Number);
+  if (!m || !d) return Number.MAX_SAFE_INTEGER;
+  const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  let next = new Date(today.getFullYear(), m - 1, d);
+  if (next < start) next = new Date(today.getFullYear() + 1, m - 1, d);
+  return next.getTime();
+}
 
 export function TopRight({ dark, toggle }: { dark: boolean; toggle: () => void }) {
   return <div className="hdr-right">
@@ -44,9 +53,12 @@ export default function Launcher() {
     window.addEventListener('keydown', h); return () => window.removeEventListener('keydown', h);
   }, []);
   const all = LAUNCHER_PAGES.flat();
-  const norm = (s: string) => s.toLowerCase();
-  const apps = q ? all.filter(a => norm(a.label).includes(norm(q))) : LAUNCHER_PAGES[page];
+  const apps = q ? all.filter(a => plain(a.label).includes(plain(q))) : LAUNCHER_PAGES[page];
   const ws = currentWs();
+  const people = useHr().employees.filter(e => e.status !== 'Đã nghỉ việc');
+  const today = new Date();
+  const birthdays = [...people].sort((a, b) => nextBirthday(a.dob, today) - nextBirthday(b.dob, today)).slice(0, 4);
+  const tenured = [...people].sort((a, b) => a.startDate.localeCompare(b.startDate)).slice(0, 3);
   return (
     <div className="launcher">
       <div className="wallpaper" />
@@ -81,8 +93,8 @@ export default function Launcher() {
           <div className="shift">Ca hành chính · 08:00 – 17:30</div>
         </div>
         <div className="card"><h3>Sự kiện</h3><MiniCal /></div>
-        <div className="card"><h3>Sinh nhật 🎂</h3>{EMPLOYEES.slice(0, 4).map((e, i) => <div className="person" key={e.code}><div className="av sm">{e.name.split(' ').pop()![0]}</div><div><b>{e.name}</b><small>{e.unit} · {28 + i > 31 ? i : 28 + i}/10</small></div></div>)}</div>
-        <div className="card"><h3>Thâm niên 🏅</h3>{EMPLOYEES.slice(6, 9).map((e, i) => <div className="person" key={e.code}><div className="av sm">{e.name.split(' ').pop()![0]}</div><div><b>{e.name}</b><small>{[9, 7, 6][i]} năm gắn bó</small></div></div>)}</div>
+        <div className="card"><h3>Sinh nhật 🎂</h3>{birthdays.map(e => <div className="person" key={e.code}><div className="av sm">{e.fullName.split(' ').pop()![0]}</div><div><b>{e.fullName}</b><small>{e.dob.slice(8, 10)}/{e.dob.slice(5, 7)}</small></div></div>)}</div>
+        <div className="card"><h3>Thâm niên 🏅</h3>{tenured.map(e => <div className="person" key={e.code}><div className="av sm">{e.fullName.split(' ').pop()![0]}</div><div><b>{e.fullName}</b><small>{yearsBetween(e.startDate, todayISO())} năm gắn bó</small></div></div>)}</div>
         <div className="card"><h3>Phép của tôi</h3><div className="leave"><div><b>12</b><small>Tổng phép năm</small></div><div><b className="o">7.5</b><small>Còn lại</small></div><div><b>4.5</b><small>Đã dùng</small></div></div></div>
         <div className="card"><h3>Đơn từ của tôi</h3>{[['Đơn nghỉ phép 30/10', 'Chờ duyệt', 'warn'], ['Đơn đi công tác Đà Nẵng', 'Đã duyệt', 'ok'], ['Đơn làm thêm giờ 18/10', 'Từ chối', 'bad']].map(([t, s, c]) => <div className="req" key={t}><span>{t}</span><span className={'status ' + c}>{s}</span></div>)}</div>
       </section>

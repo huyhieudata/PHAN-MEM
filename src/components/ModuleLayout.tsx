@@ -1,6 +1,7 @@
 import { NavLink, Outlet, useNavigate, useParams, Navigate } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import { MODULES, getModule } from '../data/menu';
+import { plain } from '../data/text';
 import { USER, currentWs } from '../data/session';
 import { useTheme } from './useTheme';
 
@@ -16,7 +17,7 @@ export default function ModuleLayout() {
     window.addEventListener('keydown', h); return () => window.removeEventListener('keydown', h);
   }, []);
   if (!mod) return <Navigate to="/select-apps" replace />;
-  const results = q ? MODULES.flatMap(m => m.sub.map(s => ({ m, s }))).filter(x => (x.m.label + ' ' + x.s.label).toLowerCase().includes(q.toLowerCase())).slice(0, 8) : [];
+  const results = q ? MODULES.flatMap(m => m.sub.map(s => ({ m, s }))).filter(x => plain(x.m.label + ' ' + x.s.label).includes(plain(q))).slice(0, 8) : [];
   return (
     <div className="shell">
       <aside className="rail">
@@ -29,7 +30,7 @@ export default function ModuleLayout() {
       </aside>
       <aside className="subnav">
         <div className="subnav-title"><span style={{ background: mod.color }}>{mod.icon}</span>{mod.label}</div>
-        {mod.sub.map(s => <NavLink key={s.id} end to={`/m/${mod.id}/${s.id === 'overview' ? '' : s.id}`} className={({ isActive }) => 'sub-item' + (isActive ? ' active' : '')}>{s.label}</NavLink>)}
+        {mod.sub.map(s => <NavLink key={s.id} end={s.id === 'overview'} to={`/m/${mod.id}/${s.id === 'overview' ? '' : s.id}`} className={({ isActive }) => 'sub-item' + (isActive ? ' active' : '')}>{s.label}</NavLink>)}
       </aside>
       <div className="main">
         <header className="topbar">

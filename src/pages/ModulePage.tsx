@@ -1,19 +1,47 @@
-import { useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { getModule } from '../data/menu';
-import EmployeeList from './EmployeeList';
+import EmployeeDetail from './hr/EmployeeDetail';
+import EmployeeList from './hr/EmployeeList';
+import ContractsPage from './hr/ContractsPage';
+import HeadcountPage from './hr/HeadcountPage';
+import DecisionsPage from './hr/DecisionsPage';
+import HrOverview from './hr/HrOverview';
+import { CertificatesPage, DirectoryPage, FamilyPage, InsurancePage, SettingsPage } from './hr/lists';
+import ReportsPage from './hr/ReportsPage';
+import RewardsPage from './hr/RewardsPage';
 import Timesheet from './Timesheet';
+import { BranchesPage, LevelsPage, OrgTreePage, PositionsPage, SystemOverview, UnitsPage } from './system/OrgPages';
 
-// Register fully-built pages here: key = `${moduleId}/${pageId}`
 const BUILT: Record<string, () => JSX.Element> = {
+  'nhan-su/overview': HrOverview,
   'nhan-su/thong-tin-nhan-su': EmployeeList,
+  'nhan-su/hop-dong': ContractsPage,
+  'nhan-su/dinh-bien': HeadcountPage,
+  'nhan-su/gia-dinh-nguoi-phu-thuoc': FamilyPage,
+  'nhan-su/chung-chi': CertificatesPage,
+  'nhan-su/danh-ba': DirectoryPage,
+  'nhan-su/khai-bao-bhxh': InsurancePage,
+  'nhan-su/quyet-dinh': DecisionsPage,
+  'nhan-su/khen-thuong': () => <RewardsPage kind="reward" />,
+  'nhan-su/ky-luat': () => <RewardsPage kind="discipline" />,
+  'nhan-su/bao-cao': ReportsPage,
+  'nhan-su/cai-dat': SettingsPage,
   'cham-cong/bang-cong': Timesheet,
+  'he-thong/overview': SystemOverview,
+  'he-thong/he-thong-chi-nhanh': BranchesPage,
+  'he-thong/co-cau-to-chuc': OrgTreePage,
+  'he-thong/cap-don-vi': LevelsPage,
+  'he-thong/don-vi': UnitsPage,
+  'he-thong/vi-tri-cong-viec': PositionsPage,
 };
 
 export default function ModulePage() {
-  const { moduleId, pageId } = useParams();
+  const { moduleId, pageId, recordId } = useParams();
   const nav = useNavigate();
-  const mod = getModule(moduleId)!;
-  const sub = mod.sub.find(s => s.id === (pageId || 'overview')) || { id: pageId!, label: 'Không tìm thấy trang' };
+  const mod = getModule(moduleId);
+  if (!mod) return <Navigate to="/select-apps" replace />;
+  const sub = mod.sub.find(s => s.id === (pageId || 'overview')) || { id: pageId || 'overview', label: 'Không tìm thấy trang' };
+  if (mod.id === 'nhan-su' && sub.id === 'thong-tin-nhan-su' && recordId) return <EmployeeDetail />;
   const Built = BUILT[`${mod.id}/${sub.id}`];
   const isOverview = sub.id === 'overview';
   return (
@@ -31,7 +59,7 @@ export default function ModulePage() {
             <button key={s.id} className="feature" onClick={() => nav(`/m/${mod.id}/${s.id}`)}>
               <div className="f-ico" style={{ background: mod.color + '1f', color: mod.color }}>{mod.icon}</div>
               <div><b>{s.label}</b><small>Quản lý {s.label.toLowerCase()} trong {mod.label.toLowerCase()}</small></div>
-              {BUILT[`${mod.id}/${s.id}`] && <span className="tag green">Demo</span>}
+              {BUILT[`${mod.id}/${s.id}`] && <span className="tag green">Sẵn sàng</span>}
             </button>))}
         </div>
       ) : (

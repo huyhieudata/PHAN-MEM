@@ -1,5 +1,13 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import { viteSingleFile } from 'vite-plugin-singlefile';
-// base './' + single-file bundle => dist/index.html works offline via file://
-export default defineConfig({ base: './', plugins: [react(), viteSingleFile()] });
+
+// base './' + HashRouter: bản build chạy dưới /PHAN-MEM/ trên GitHub Pages và cả file://.
+export default defineConfig({
+  base: './',
+  plugins: [react(), viteSingleFile()],
+  test: {
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.ts',
+  },
+});
