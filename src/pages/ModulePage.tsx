@@ -9,10 +9,10 @@ import HrOverview from './hr/HrOverview';
 import { CertificatesPage, DirectoryPage, FamilyPage, InsurancePage, SettingsPage } from './hr/lists';
 import ReportsPage from './hr/ReportsPage';
 import RewardsPage from './hr/RewardsPage';
-import Timesheet from './Timesheet';
 import { BranchesPage, LevelsPage, OrgTreePage, PositionsPage, SystemOverview, UnitsPage } from './system/OrgPages';
 import RequestsPage from './don-tu/RequestsPage';
-import { DelegationPage, DonTuOverview, DonTuReports, DonTuSettings, LeaveListPage, LeaveOverview } from './don-tu/more';
+import { DelegationPage, DonTuOverview, LeaveListPage, LeaveManagePage, LeavePolicyPage, OtPolicyPage, OtReportPage, OtThresholdPage, OtThresholdReport, ProcedurePage, ReasonPage, RequestReportPage, RequestSetupPage } from './don-tu/spec';
+import { AttendanceMethodPage, AttendanceOverview, AttendanceReports, HolidayPage, OpenShiftPage, RawAttendancePage, ScheduleConfigPage, SchedulePage, ShiftDayPage, ShiftListPage, ShiftPlanPage, StandardWorkdayPage, TemplateListPage, TimesheetPage, UnspecifiedPage, WorkdaySettings } from './cham-cong/Pages';
 
 const BUILT: Record<string, () => JSX.Element> = {
   'nhan-su/overview': HrOverview,
@@ -36,11 +36,40 @@ const BUILT: Record<string, () => JSX.Element> = {
   'don-tu/quan-ly': () => <RequestsPage view="manage" />,
   'don-tu/theo-doi': () => <RequestsPage view="watch" />,
   'don-tu/tao-ho': () => <RequestsPage view="behalf" />,
-  'don-tu/bao-cao': DonTuReports,
-  'don-tu/phep': LeaveOverview,
+  'don-tu/bao-cao-don-tu': RequestReportPage,
+  'don-tu/bao-cao-ot': OtReportPage,
+  'don-tu/bao-cao-nguong-ot': OtThresholdReport,
+  'don-tu/phep': LeaveManagePage,
+  'don-tu/chinh-sach-nghi-phep-v2': LeavePolicyPage,
   'don-tu/danh-sach-phep': LeaveListPage,
-  'don-tu/cai-dat': DonTuSettings,
-  'cham-cong/bang-cong': Timesheet,
+  'don-tu/chinh-sach-nghi-phep': LeavePolicyPage,
+  'don-tu/thiet-lap-don-tu': RequestSetupPage,
+  'don-tu/chinh-sach-ot': OtPolicyPage,
+  'don-tu/cau-hinh-nguong-ot': OtThresholdPage,
+  'don-tu/ly-do-tao-don-tu': ReasonPage,
+  'don-tu/quy-trinh-duyet-don': ProcedurePage,
+  'cham-cong/overview': AttendanceOverview,
+  'cham-cong/bang-cong': TimesheetPage,
+  'cham-cong/du-lieu-cham-cong': RawAttendancePage,
+  'cham-cong/lich-lam-viec': SchedulePage,
+  'cham-cong/lich-lam-viec-theo-ca': ShiftDayPage,
+  'cham-cong/bao-cao-cham-cong': AttendanceReports,
+  'cham-cong/cai-dat-ngay-cong': WorkdaySettings,
+  'cham-cong/cai-dat-cong-chuan': StandardWorkdayPage,
+  'cham-cong/mau-bang-cong': TemplateListPage,
+  'cham-cong/thong-tin-tinh-cong': () => <UnspecifiedPage title="Thông tin tính công" />,
+  'cham-cong/cai-dat-thong-bao': () => <UnspecifiedPage title="Cài đặt thông báo" />,
+  'cham-cong/ca-lam-viec': ShiftListPage,
+  'cham-cong/phan-ca': () => <ShiftPlanPage />,
+  'cham-cong/lich-nghi-le': HolidayPage,
+  'cham-cong/ca-mo': OpenShiftPage,
+  'cham-cong/ke-hoach-phan-ca-theo-kip': () => <ShiftPlanPage kip />,
+  'cham-cong/cau-hinh-lich-lam-viec': ScheduleConfigPage,
+  'cham-cong/cai-dat-cham-cong': AttendanceMethodPage,
+  'cham-cong/cham-cong-dien-thoai': () => <UnspecifiedPage title="Chấm công điện thoại" />,
+  'cham-cong/cham-cong-van-tay': () => <UnspecifiedPage title="Chấm công vân tay" />,
+  'cham-cong/ho-so-khuon-mat': () => <UnspecifiedPage title="Hồ sơ khuôn mặt" />,
+  'cham-cong/cham-cong-ho': () => <UnspecifiedPage title="Chấm công hộ" />,
   'he-thong/overview': SystemOverview,
   'he-thong/he-thong-chi-nhanh': BranchesPage,
   'he-thong/co-cau-to-chuc': OrgTreePage,

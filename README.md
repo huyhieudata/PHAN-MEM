@@ -57,7 +57,8 @@ Mọi thao tác ghi đi qua `hr` trong `src/data/repositories`. Giao diện ch�
 - Hệ thống: cây cơ cấu tổ chức, đơn vị, cấp đơn vị, vị trí, chi nhánh.
 - Danh bạ, người phụ thuộc, chứng chỉ, khai báo BHXH dùng chung dữ liệu hồ sơ.
 - Bảng công lấy nhân sự từ cùng repository.
-- Đơn từ: nghỉ phép, đi muộn/về sớm, OT, công tác, làm việc tại nhà, bổ sung công, đổi ca. Các mục Tất cả / Của tôi / Cần duyệt / Ủy quyền / Quản lý / Theo dõi / Tạo hộ, quỹ phép và chính sách OT.
+- Đơn từ bám ghi chú khảo sát: 12 loại đơn, ngăn chi tiết, bộ lọc, phép, chính sách OT và ngưỡng OT.
+- Chấm công: bảng công tính từ ca, đơn và dữ liệu thô, lịch làm việc, ca và báo cáo. Việc khảo sát chưa nói rõ nằm trong `docs/chamcong-parity-checklist.md`.
 
 ## Lộ trình các phân hệ tiếp theo
 
