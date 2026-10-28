@@ -8,7 +8,7 @@ Nếu trang chưa mở được, vào **Settings → Pages → Source: GitHub Ac
 
 ## Chạy trên máy
 
-Cần Node.js 20 trở lên.
+Cần Node.js 22.22.2 trở lên (xem `.nvmrc`). Node 20 không chạy được bộ test: jsdom 30 dùng undici 8, và undici gọi `zlib.createZstdDecompress` khi khởi động.
 
 ```bash
 npm ci
