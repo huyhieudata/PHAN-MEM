@@ -10,6 +10,7 @@ import RequestsPage from './don-tu/RequestsPage';
 import { DelegationPage, DonTuOverview, LeaveListPage, LeaveManagePage, LeavePolicyPage, OtPolicyPage, OtReportPage, OtThresholdPage, OtThresholdReport, ProcedurePage, ReasonPage, RequestReportPage, RequestSetupPage } from './don-tu/spec';
 import { AttendanceMethodPage, AttendanceOverview, AttendanceReports, HolidayPage, OpenShiftPage, RawAttendancePage, ScheduleConfigPage, SchedulePage, ShiftDayPage, ShiftListPage, ShiftPlanPage, StandardWorkdayPage, TemplateListPage, TimesheetPage, UnspecifiedPage, WorkdaySettings } from './cham-cong/Pages';
 import { CriteriaPage, EvalOverview, FormCreate, FormFill, FormList, GroupPage, KpiBoard, KpiCreate, KpiList, PeriodCreate, PeriodList, TemplateDetail, TemplateEditor, TemplateList as EvalTemplates } from './eval/pages';
+import { PrioritySettings, ProjectBoard, StatusSettings, TaskOverview, TaskReport } from './tasks/pages';
 import { AccountingPage, CostPage, CreatePayroll, IncomeInfoPage, PayrollDetail, PayrollGate, PayrollOverview, SalaryReport, TaxTablePage, listPage } from './payroll/pages';
 import { CategoryPage, IndicatorPage, ReportTemplatePage, SimpleMaster, TableSettingsPage, TemplateEdit, TemplateList, V1Extra, V1General, V1MainList, V1PayslipSettings } from './payroll/settings';
 
@@ -143,6 +144,11 @@ const BUILT: Record<string, () => JSX.Element> = {
   'danh-gia/tieu-chi': CriteriaPage,
   'danh-gia/nhom-tieu-chi': GroupPage,
   'danh-gia/mau-danh-gia': EvalTemplates,
+  'cong-viec/overview': TaskOverview,
+  'cong-viec/bao-cao': TaskReport,
+  'cong-viec/du-an': ProjectBoard,
+  'cong-viec/trang-thai': StatusSettings,
+  'cong-viec/uu-tien': PrioritySettings,
 };
 
 export default function ModulePage() {

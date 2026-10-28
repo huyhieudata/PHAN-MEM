@@ -1,4 +1,4 @@
-# Đối chiếu Đánh giá (Công việc ở PR sau)
+# Đối chiếu Đánh giá và Công việc
 
 Nguồn: `uploads/happytime-danhgia-congviec.md`. Công việc chưa nằm trong PR này.
 
@@ -20,4 +20,22 @@ Nguồn: `uploads/happytime-danhgia-congviec.md`. Công việc chưa nằm trong
 2. Nhãn lọc Hạn đánh giá (Quá hạn, Tuần này) ghi chú nói chưa chốt.
 3. Màn kết quả sau khi duyệt xong không được khảo sát.
 4. Cột file Tải lên tiêu chí không có, wizard không ghi dữ liệu.
-5. Công việc (Kanban, báo cáo, cài đặt trạng thái) nằm ở PR tiếp theo.
+## Công việc đã có
+
+- [x] Menu tổng quan, báo cáo, dự án, trạng thái, độ ưu tiên
+- [x] Thẻ tổng quan
+- [x] Báo cáo: bộ lọc, 3 thẻ, donut trạng thái và ưu tiên (gồm Không xác định), cột theo dự án
+- [x] Dự án HCNS THÁNG 8, thêm dự án bằng ô nhập
+- [x] Kanban 4 cột đúng màu và 5 thẻ mẫu, kéo thả đổi cột, nút +
+- [x] Danh sách: dropdown trạng thái và ưu tiên, việc con, ngày 14/08–31/08 của hai việc, chủ sở hữu Dương Văn Hiệu, xóa
+- [x] Báo cáo trong dự án
+- [x] Modal chi tiết: ưu tiên, trạng thái, chủ sở hữu, người thực hiện, theo dõi, mô tả, việc con, bình luận
+- [x] Ngăn thêm công việc
+- [x] Cài đặt 4 trạng thái và 2 mức ưu tiên, modal thêm
+
+## Open questions (Công việc)
+
+6. Menu ⋮ trên thẻ Kanban và trên dự án không có mục.
+7. Thùng rác trên danh sách đang xóa việc. Ghi chú không nói rõ có xóa hẳn hay không.
+8. Định dạng file đính kèm không được liệt kê.
+9. Cột Kanban ghi "Cần làm / Đang làm" còn cài đặt ghi "Chưa thực hiện / Đang thực hiện". Bảng dùng cả hai: tiêu đề cột theo Kanban, tên trong dropdown theo cài đặt.
